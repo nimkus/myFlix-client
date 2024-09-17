@@ -9,21 +9,26 @@ export const MainView = () => {
 
   useEffect(() => {
     fetch('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error ('Network response was not ok');
+        }
+        return res.json();
+      })
       .then((data) => {
-        const moviesFromApi = data.docs.map((doc) => {
+        const moviesFromApi = data.map((movie) => {
           return {
-            /* id: doc._id,
-            title: doc.title,
-            year: doc.year,
-            //genre: doc.genre,
-            //director: doc.director,
-            imdb_rating: doc.imdb_rating,
-            duration: doc.duration,
-            language: doc.language,
-            description: doc.description,
-            //image: doc.imagePath,
-            featured: doc.featured, */
+            id: movie._id,
+            title: movie.title,
+            year: movie.year,
+            //genre: movie.genre,
+            //director: movie.director,
+            imdb_rating: movie.imdb_rating,
+            duration: movie.duration,
+            language: movie.language,
+            description: movie.description,
+            image: movie.imagePath,
+            featured: movie.featured,
           };
         });
 
