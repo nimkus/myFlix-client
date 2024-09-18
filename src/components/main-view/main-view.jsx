@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { MovieView } from '../movie-view/movie-view';
 import { MovieCard } from '../movie-card/movie-card';
+import { LoginView } from '../login-view/login-view';
 
 export const MainView = () => {
   const [movies, setMovies] = useState([]);
-
   const [selectedMovie, setSelectedMovie] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     fetch('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies')
@@ -35,6 +36,10 @@ export const MainView = () => {
         setMovies(moviesFromApi);
       });
   }, []);
+
+  if (!user) {
+    return <LoginView onLoggedIn={(user) => setUser(user)} />;
+  }
 
   if (movies.length === 0) {
     return <div>The list is empty!</div>;
