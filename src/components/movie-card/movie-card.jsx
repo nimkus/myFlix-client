@@ -18,7 +18,7 @@ MovieCard.propTypes = {
     title: PropTypes.string,
     year: PropTypes.number,
     genre: PropTypes.array,
-    director: PropTypes.object,
+    director: PropTypes.array,
     imdb_rating: PropTypes.number,
     duration: PropTypes.number,
     language: PropTypes.string,
