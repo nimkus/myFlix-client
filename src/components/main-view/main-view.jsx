@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MovieView } from '../movie-view/movie-view';
 import { MovieCard } from '../movie-card/movie-card';
 import { LoginView } from '../login-view/login-view';
+import { NavBar } from '../nav-bar/nav-bar';
 import { SignupView } from '../signup-view/signup-view';
 import { Button, Row, Col } from 'react-bootstrap';
 
@@ -78,6 +79,7 @@ export const MainView = () => {
         <div>The list is empty!</div>
       ) : (
         <>
+          <NavBar />
           {movies.map((movie) => (
             <Col className="mb-4" md={4} key={movie.id}>
               <MovieCard

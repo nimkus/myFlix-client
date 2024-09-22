@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
-import { Button, Card } from 'react-bootstrap';
+import Form from 'react-bootstrap/Form';
+import Card from 'react-bootstrap/Card';
 
 export const MovieCard = ({ movie, onMovieClick }) => {
   return (
