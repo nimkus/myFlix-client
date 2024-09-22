@@ -18,31 +18,29 @@ export const LoginView = ({ onLoggedIn }) => {
     fetch('https://nimkus-movies-flix-6973780b155e.herokuapp.com/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'content-type': 'application/json',
       },
       body: JSON.stringify(data),
     })
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then((error) => {
-            const errorMessage = error.message || `Error ${res.status}: ${res.statusText}`;
-            throw new Error(errorMessage);
-          });
+      .then((response) => {
+        if (response.ok) {
+          alert('Login successful');
+        } else {
+          const errorMessage = `Error ${response.status}: ${response.statusText}`;
+          throw new Error(errorMessage);
         }
-        return res.json();
       })
       .then((data) => {
-        if (data?.user && data?.token) {
+        if (data.user) {
           localStorage.setItem('user', JSON.stringify(data.user));
           localStorage.setItem('token', data.token);
           onLoggedIn(data.user, data.token);
         } else {
-          alert('Invalid user data returned from server.');
+          alert('No such user');
         }
       })
-      .catch((error) => {
-        console.error('Login failed:', error); // Log error details to console for debugging
-        alert(error.message || 'Something went wrong, please try again.');
+      .catch((e) => {
+        alert('Something went wrong');
       });
   };
 
