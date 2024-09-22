@@ -12,7 +12,7 @@ export const LoginView = ({ onLoggedIn }) => {
 
     const data = {
       access: username,
-      secret: password,
+      password: password,
     };
 
     fetch('https://nimkus-movies-flix-6973780b155e.herokuapp.com/login', {
