@@ -13187,4 +13187,8 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
+
+.navbar-transparent {
+  background-color: #0000 !important;
+}
 /*# sourceMappingURL=index.2212206d.css.map */

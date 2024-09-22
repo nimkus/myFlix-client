@@ -40,7 +40,7 @@ export const SignupView = () => {
   };
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form onSubmit={handleSubmit} className="mt-3">
       <Form.Group controlId="formUsernameSignup">
         <Form.Label>Username: </Form.Label>
         <Form.Control
@@ -68,6 +68,7 @@ export const SignupView = () => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
           placeholder="you@example.com"
           required
         />
@@ -82,7 +83,7 @@ export const SignupView = () => {
           required
         />
       </Form.Group>
-      <Button type="submit" variant="primary">
+      <Button type="submit" className="mt-3" variant="primary">
         Submit
       </Button>
     </Form>

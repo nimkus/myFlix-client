@@ -2,3 +2,7 @@ $primary: SeaGreen;
 $body-bg: Honeydew;
 
 @import '~bootstrap/scss/bootstrap.scss';
+
+.navbar-transparent {
+  background-color: transparent !important;
+}
