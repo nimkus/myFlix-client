@@ -22,18 +22,27 @@ export const LoginView = ({ onLoggedIn }) => {
       },
       body: JSON.stringify(data),
     })
-      .then((response) => response.json())
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().then((error) => {
+            const errorMessage = error.message || `Error ${res.status}: ${res.statusText}`;
+            throw new Error(errorMessage);
+          });
+        }
+        return res.json();
+      })
       .then((data) => {
-        if (data.user) {
+        if (data?.user && data?.token) {
           localStorage.setItem('user', JSON.stringify(data.user));
           localStorage.setItem('token', data.token);
           onLoggedIn(data.user, data.token);
         } else {
-          alert('No such user');
+          alert('Invalid user data returned from server.');
         }
       })
-      .catch((e) => {
-        alert('Something went wrong');
+      .catch((error) => {
+        console.error('Login failed:', error); // Log error details to console for debugging
+        alert(error.message || 'Something went wrong, please try again.');
       });
   };
 
