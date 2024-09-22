@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import Form from 'react-bootstrap/Form';
+import React, { useState } from 'react';
 import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
 
 export const LoginView = ({ onLoggedIn }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = (event) => {
-    // prevents reload the entire page
+    // this prevents the default behavior of the form which is to reload the entire page
     event.preventDefault();
 
     const data = {
-      username: username,
-      password: password,
+      access: username,
+      secret: password,
     };
 
     fetch('https://nimkus-movies-flix-6973780b155e.herokuapp.com/login', {
