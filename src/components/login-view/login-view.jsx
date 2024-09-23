@@ -7,29 +7,22 @@ export const LoginView = ({ onLoggedIn }) => {
   const [password, setPassword] = useState('');
 
   const handleSubmit = (event) => {
-    // this prevents the default behavior of the form which is to reload the entire page
+    // prevents reload the entire page
     event.preventDefault();
 
     const data = {
-      access: username,
+      username: username,
       password: password,
     };
 
     fetch('https://nimkus-movies-flix-6973780b155e.herokuapp.com/login', {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     })
-      .then((response) => {
-        if (response.ok) {
-          alert('Login successful');
-        } else {
-          const errorMessage = `Error ${response.status}: ${response.statusText}`;
-          throw new Error(errorMessage);
-        }
-      })
+      .then((response) => response.json())
       .then((data) => {
         if (data.user) {
           localStorage.setItem('user', JSON.stringify(data.user));
