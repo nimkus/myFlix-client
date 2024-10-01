@@ -35364,7 +35364,7 @@ const NavBar = ()=>{
             children: [
                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _navbarDefault.default).Brand, {
                     href: "#home",
-                    classname: "md-2",
+                    className: "md-2",
                     children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("img", {
                         alt: "Bunbuster logo shows a rabbit with sunglasses above lettering",
                         width: "15%",

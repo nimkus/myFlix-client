@@ -6,7 +6,7 @@ export const NavBar = () => {
   return (
     <Navbar expand="lg">
       <Container>
-        <Navbar.Brand href="#home" classname="md-2">
+        <Navbar.Brand href="#home" className="md-2">
           <img
             alt="Bunbuster logo shows a rabbit with sunglasses above lettering"
             width="15%"
