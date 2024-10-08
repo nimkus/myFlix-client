@@ -1,14 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 
 export const SignupView = () => {
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [birthday, setBirthday] = useState('');
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     // prevents reload the entire page
     event.preventDefault();
 
@@ -18,25 +21,26 @@ export const SignupView = () => {
       email: email,
       birthday: birthday,
     };
-
-    fetch('https://nimkus-movies-flix-6973780b155e.herokuapp.com/users', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => {
-        if (response.ok) {
-          alert('Signup successful');
-          window.location.reload();
-        } else {
-          alert('Signup failed');
-        }
-      })
-      .catch((e) => {
-        alert('Something went wrong');
+    try {
+      const response = await fetch('https://nimkus-movies-flix-6973780b155e.herokuapp.com/users', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
+
+      if (response.ok) {
+        alert('Signup successful');
+        navigate('/login'); // Redirects to the LoginView on successful Sign up
+      } else {
+        const errorMessage = await response.text(); // Reads as plain text
+        alert(`Signup failed: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error('Error during signup:', error);
+      alert('An error occurred during signup. Please try again later.');
+    }
   };
 
   return (
