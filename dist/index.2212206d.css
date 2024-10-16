@@ -13191,4 +13191,14 @@ textarea.form-control-lg {
 .navbar-transparent {
   background-color: #0000 !important;
 }
+
+.card-link {
+  transition: transform .2s, box-shadow .2s;
+}
+
+.card-link:hover {
+  border-color: #2e8b57;
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px #0003;
+}
 /*# sourceMappingURL=index.2212206d.css.map */
