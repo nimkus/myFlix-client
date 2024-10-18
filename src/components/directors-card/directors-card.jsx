@@ -30,7 +30,7 @@ export const DirectorsCard = ({ director }) => {
 
 // define prop constraints
 DirectorsCard.propTypes = {
-  directors: PropTypes.shape({
+  director: PropTypes.shape({
     name: PropTypes.string,
     bio: PropTypes.string,
     birthDate: PropTypes.string,

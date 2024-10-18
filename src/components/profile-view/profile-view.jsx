@@ -6,7 +6,7 @@ import { MdEditNote } from 'react-icons/md';
 import { MovieCard } from '../movie-card/movie-card.jsx';
 
 // UserEditView component handles profile editing, including password change, deletion, and displaying favorite movies
-export const UserEditView = ({ userInfo, movies, toggleFavoriteMovie }) => {
+export const ProfileView = ({ userInfo, movies, toggleFavoriteMovie }) => {
   // Filter the list of favorite movies from the movies prop based on user information
   const favoriteMovies = movies.filter((movie) => userInfo.favMovies.includes(movie.id));
 
@@ -318,11 +318,11 @@ export const UserEditView = ({ userInfo, movies, toggleFavoriteMovie }) => {
           </Modal.Header>
           <Modal.Body>Are you sure you want to delete your profile? This action is irreversible.</Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowDeleteModal(false)} className="rounded-pill">
-              Cancel
-            </Button>
             <Button variant="danger" onClick={handleDelete} className="rounded-pill">
               Delete Profile
+            </Button>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)} className="rounded-pill">
+              Cancel
             </Button>
           </Modal.Footer>
         </Modal>

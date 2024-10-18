@@ -7,7 +7,7 @@ import { DirectorsCard } from '../directors-card/directors-card.jsx';
 import { DirectorsView } from '../directors-view/directors-view.jsx';
 import { GenreCard } from '../genre-card/genre-card.jsx';
 import { GenreView } from '../genre-view/genre-view.jsx';
-import { UserEditView } from '../useredit-view/useredit-view.jsx';
+import { ProfileView } from '../profile-view/profile-view.jsx';
 import { NavBar } from '../nav-bar/nav-bar';
 import { Row, Col } from 'react-bootstrap';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
@@ -70,7 +70,6 @@ export const MainView = () => {
     const data = await fetchData(url);
     if (data) {
       setter(data);
-      console.log(data);
     }
   };
 
@@ -215,7 +214,6 @@ export const MainView = () => {
   const renderDirectors = () => (
     <>
       <NavBar user={auth.user} onLogout={handleLogout} />
-      console.log(directors);
       <ListOrMessage
         list={directors}
         renderItem={(director) => (
@@ -276,7 +274,7 @@ export const MainView = () => {
     }
     return (
       <Col md={8}>
-        <UserEditView userInfo={userInfo} movies={movies} toggleFavoriteMovie={toggleFavoriteMovie} />
+        <ProfileView userInfo={userInfo} movies={movies} toggleFavoriteMovie={toggleFavoriteMovie} />
       </Col>
     );
   };
