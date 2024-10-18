@@ -40,7 +40,7 @@ export const LoginView = ({ onLoggedIn }) => {
   return (
     <Form
       onSubmit={handleSubmit}
-      className="mt-4 p-4 border rounded shadow-sm"
+      className="mt-4 p-4 border rounded shadow-sm bg-light"
       style={{ maxWidth: '400px', margin: '0 auto' }}
     >
       <h3 className="text-center mb-4">Login</h3>
