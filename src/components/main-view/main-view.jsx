@@ -7,114 +7,151 @@ import { DirectorsCard } from '../directors-card/directors-card.jsx';
 import { DirectorsView } from '../directors-view/directors-view.jsx';
 import { GenreCard } from '../genre-card/genre-card.jsx';
 import { GenreView } from '../genre-view/genre-view.jsx';
+import { UserEditView } from '../useredit-view/useredit-view.jsx';
 import { NavBar } from '../nav-bar/nav-bar';
 import { Row, Col } from 'react-bootstrap';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 
 export const MainView = () => {
-  // Get the user from local storage, if existing, and store it in state
-  const storedUser = JSON.parse(localStorage.getItem('user'));
-  const [user, setUser] = useState(storedUser ? storedUser : null);
+  const [auth, setAuth] = useState(() => ({
+    user: JSON.parse(localStorage.getItem('user')) || null,
+    token: localStorage.getItem('token') || null,
+  }));
 
-  // Get the token from local storage, if existing, and store it in state
-  const storedToken = localStorage.getItem('token');
-  const [token, setToken] = useState(storedToken ? storedToken : null);
+  const { user, token } = auth;
+
+  const handleLogout = () => {
+    setAuth({ user: null, token: null });
+    localStorage.clear();
+  };
 
   // State to store data fetched from the API
   const [movies, setMovies] = useState([]);
   const [directors, setDirectors] = useState([]);
   const [genres, setGenres] = useState([]);
+  const [userInfo, setUserInfo] = useState([]);
 
   /**
-   * Reusable function to fetch data from an API endpoint
-   * @param {string} url - API endpoint to fetch data from
-   * @param {function} setter - State setter function to update the corresponding state
+   * Generalized function to fetch data from an API endpoint with authentication
+   * @param {string} url - The API endpoint to fetch data from
+   * @returns {Promise<object|null>} - The JSON data from the response or null if an error occurred
    */
-  const FetchDataFromAPI = async (url, setter) => {
-    // If no token, exit early
-    if (!token) return;
+  const fetchData = async (url) => {
+    if (!auth.token) {
+      console.warn('No token available. Cannot fetch data.');
+      return null;
+    }
 
     try {
-      // Fetch data from the API with authorization header
       const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${auth.token}` },
       });
 
-      // Check if the response is successful, throw an error if not
       if (!response.ok) {
         throw new Error(`Network response was not ok: (${response.status}) ${response.statusText}`);
       }
 
-      // Parse the JSON data and call the setter function to update state
       const data = await response.json();
-      setter(data);
+      return data;
     } catch (error) {
-      // Log any errors encountered during the fetch
       console.error('Fetch error:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Wrapper function for fetching data and updating component state
+   * @param {string} url - The API endpoint
+   * @param {function} setter - State setter function to update the corresponding state
+   */
+  const fetchAndSetState = async (url, setter) => {
+    const data = await fetchData(url);
+    if (data) {
+      setter(data);
     }
   };
 
   // Fetch movies when the component mounts or when the token changes
   useEffect(() => {
-    FetchDataFromAPI('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies', (data) => {
-      // Map through the movie data and format it before updating the state
-      const moviesFromApi = data.map((movie) => ({
-        id: movie._id,
-        title: movie.title,
-        year: movie.year,
-        genre: movie.genre,
-        genreName: movie.genre?.length > 0 ? movie.genre.map((g) => g.name).join(', ') : 'No genre available',
-        director: movie.director,
-        directorName:
-          movie.director?.length > 0 ? movie.director.map((d) => d.name).join(', ') : 'No director available',
-        imdb_rating: movie.imdb_rating,
-        duration: movie.duration,
-        language: movie.language,
-        description: movie.description,
-        image: movie.imagePath,
-        featured: movie.featured,
-      }));
-      // Update the movies state with formatted data
-      setMovies(moviesFromApi);
-    });
-  }, [token]);
+    if (auth.user && auth.token) {
+      const url = 'https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies';
+
+      fetchAndSetState(url, (data) => {
+        const moviesFromApi = data.map((movie) => ({
+          id: movie._id,
+          title: movie.title,
+          year: movie.year,
+          genre: movie.genre,
+          genreName: movie.genre?.length > 0 ? movie.genre.map((g) => g.name).join(', ') : 'No genre available',
+          director: movie.director,
+          directorName:
+            movie.director?.length > 0 ? movie.director.map((d) => d.name).join(', ') : 'No director available',
+          imdb_rating: movie.imdb_rating,
+          duration: movie.duration,
+          language: movie.language,
+          description: movie.description,
+          image: movie.imagePath,
+          featured: movie.featured,
+        }));
+        setMovies(moviesFromApi);
+      });
+    }
+  }, [auth.user, auth.token]);
 
   // Fetch directors when the component mounts or when the token changes
   useEffect(() => {
-    FetchDataFromAPI('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/directors/all', (data) => {
-      // Map through the director data and format it before updating the state
-      const directorsFromApi = data.map((director) => ({
-        id: director._id,
-        name: director.name,
-        bio: director.bio,
-        birthDate: director.date_of_birth,
-        deathDate: director.date_of_death,
-      }));
-      // Update the directors state with formatted data
-      setDirectors(directorsFromApi);
-    });
-  }, [token]);
+    if (auth.user && auth.token) {
+      const url = 'https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/directors/all';
 
-  // Fetch directors when the component mounts or when the token changes
+      fetchAndSetState(url, (data) => {
+        const directorsFromApi = data.map((director) => ({
+          id: director._id,
+          name: director.name,
+          bio: director.bio,
+          birthDate: director.date_of_birth ? new Date(director.date_of_birth).toLocaleDateString() : null,
+          deathDate: director.date_of_death ? new Date(director.date_of_death).toLocaleDateString() : null,
+        }));
+        setDirectors(directorsFromApi);
+      });
+    }
+  }, [auth.user, auth.token]);
+
+  // Fetch genre when the component mounts or when the token changes
   useEffect(() => {
-    FetchDataFromAPI('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/genres/all', (data) => {
-      // Map through the director data and format it before updating the state
-      const genresFromApi = data.map((genre) => ({
-        id: genre._id,
-        name: genre.name,
-        description: genre.description,
-      }));
-      // Update the directors state with formatted data
-      setGenres(genresFromApi);
-    });
-  }, [token]);
+    if (auth.user && auth.token) {
+      const url = 'https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/genres/all';
 
-  // Function to handle logout
-  const handleLogout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.clear();
-  };
+      fetchAndSetState(url, (data) => {
+        const genresFromApi = data.map((genre) => ({
+          id: genre._id,
+          name: genre.name,
+          description: genre.description,
+        }));
+        setGenres(genresFromApi);
+      });
+    }
+  }, [auth.user, auth.token]);
+
+  // Fetch info of current user
+  useEffect(() => {
+    if (auth.user && auth.token) {
+      const url = `https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${auth.user.username}`;
+
+      fetchAndSetState(url, (data) => {
+        const userInfoFromApi = {
+          id: data._id,
+          username: data.username,
+          password: data.password,
+          email: data.email,
+          birthday: data.birthday ? new Date(data.birthday).toLocaleDateString() : null,
+          favMovies: data.favMovies,
+        };
+        console.log(userInfoFromApi);
+
+        setUserInfo(userInfoFromApi);
+      });
+    }
+  }, [auth.user, auth.token]);
 
   // Route render functions
   const renderSignup = () => (
@@ -126,37 +163,54 @@ export const MainView = () => {
   const renderLogin = () => (
     <Col md={5}>
       <LoginView
-        onLoggedIn={(user, token) => {
-          setUser(user);
-          setToken(token);
+        onLoggedIn={(newUser, newToken) => {
+          setAuth({ user: newUser, token: newToken });
+          localStorage.setItem('user', JSON.stringify(newUser));
+          localStorage.setItem('token', newToken);
         }}
       />
     </Col>
   );
 
+  const toggleFavoriteMovie = (movieId) => {
+    setUserInfo((prevUserInfo) => {
+      const updatedFavMovies = prevUserInfo.favMovies.includes(movieId)
+        ? prevUserInfo.favMovies.filter((id) => id !== movieId) // Remove
+        : [...prevUserInfo.favMovies, movieId]; // Add
+
+      return {
+        ...prevUserInfo,
+        favMovies: updatedFavMovies,
+      };
+    });
+  };
+
   const renderMovies = () => (
     <>
-      <NavBar user={user} onLogout={handleLogout} />
+      <NavBar user={auth.user} onLogout={handleLogout} />
       <ListOrMessage
         list={movies}
-        renderItem={(movie) => (
-          <Col className="mb-4" md={4} key={movie.id}>
-            <MovieCard movie={movie} />
-          </Col>
-        )}
+        renderItem={(movie) => {
+          const isFavorite = userInfo.favMovies.includes(movie.id);
+          return (
+            <Col className="mb-4" md={4} key={movie.id}>
+              <MovieCard movie={movie} isFavorite={isFavorite} onToggleFavorite={toggleFavoriteMovie} />
+            </Col>
+          );
+        }}
       />
     </>
   );
 
   const renderSingleMovie = () => (
     <Col md={8}>
-      <MovieView movies={movies} />
+      <MovieView movies={movies} toggleFavoriteMovie={toggleFavoriteMovie} userFavorites={userInfo.favMovies} />
     </Col>
   );
 
   const renderDirectors = () => (
     <>
-      <NavBar user={user} onLogout={handleLogout} />
+      <NavBar user={auth.user} onLogout={handleLogout} />
       <ListOrMessage
         list={directors}
         renderItem={(director) => (
@@ -184,7 +238,7 @@ export const MainView = () => {
 
   const renderGenres = () => (
     <>
-      <NavBar user={user} onLogout={handleLogout} />
+      <NavBar user={auth.user} onLogout={handleLogout} />
       <ListOrMessage
         list={genres}
         renderItem={(genre) => (
@@ -210,15 +264,27 @@ export const MainView = () => {
     );
   };
 
+  const renderSingleUserInfo = () => {
+    if (userInfo.length === 0) {
+      return <p>Loading user information...</p>;
+    }
+
+    return (
+      <Col md={8}>
+        <UserEditView userInfo={userInfo} movies={movies} toggleFavoriteMovie={toggleFavoriteMovie} />
+      </Col>
+    );
+  };
+
   // Component to handle rendering a list or a fallback message
   const ListOrMessage = ({ list, renderItem, emptyMessage = 'List is loading or empty' }) => {
     return list.length > 0 ? list.map(renderItem) : <Col>{emptyMessage}</Col>;
   };
 
   // ProtectedRoute component to handle authentication
-  const ProtectedRoute = ({ children }) => {
-    return user ? children : <Navigate to="/login" replace />;
-  };
+  const ProtectedRoute = React.memo(({ children }) => {
+    return auth.user ? children : <Navigate to="/login" replace />;
+  });
 
   // Component to handle unmatched routes
   const NotFound = () => (
@@ -232,10 +298,13 @@ export const MainView = () => {
     <BrowserRouter>
       <Row className="justify-content-md-center">
         <Routes>
-          <Route path="/signup" element={user ? <Navigate to="/" /> : renderSignup()} />
-          <Route path="/login" element={user ? <Navigate to="/" /> : renderLogin()} />
-          <Route path="/movies/:movieId" element={<ProtectedRoute>{renderSingleMovie()}</ProtectedRoute>} />
+          {/* Login and Signup Routes */}
+          <Route path="/signup" element={auth.user ? <Navigate to="/" /> : renderSignup()} />
+          <Route path="/login" element={auth.user ? <Navigate to="/" /> : renderLogin()} />
+
+          {/* Movies Routes */}
           <Route path="/" element={<ProtectedRoute>{renderMovies()}</ProtectedRoute>} />
+          <Route path="/movies/:movieId" element={<ProtectedRoute>{renderSingleMovie()}</ProtectedRoute>} />
           <Route path="/movies/directors" element={<ProtectedRoute>{renderDirectors()}</ProtectedRoute>} />
           <Route
             path="/movies/directors/:directorName"
@@ -243,7 +312,12 @@ export const MainView = () => {
           />
           <Route path="/movies/genres" element={<ProtectedRoute>{renderGenres()}</ProtectedRoute>} />
           <Route path="/movies/genres/:genreName" element={<ProtectedRoute>{renderSingleGenre()}</ProtectedRoute>} />
-          <Route path="*" element={<NotFound />} /> {/* Catch-all route for 404 Not Found */}
+
+          {/* User Profile Routes */}
+          <Route path="/users/:username" element={<ProtectedRoute>{renderSingleUserInfo()}</ProtectedRoute>} />
+
+          {/* Catch-all route for 404 Not Found */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Row>
     </BrowserRouter>
