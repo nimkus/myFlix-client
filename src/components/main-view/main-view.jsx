@@ -70,7 +70,7 @@ export const MainView = () => {
     const data = await fetchData(url);
     if (data) {
       setter(data);
-      console.log(setter);
+      console.log(data);
     }
   };
 
@@ -91,9 +91,15 @@ export const MainView = () => {
   // Function to handle rendering a list or a fallback message
   const ListOrMessage = ({ list, renderItem, emptyMessage = 'List is loading or empty' }) => {
     return list.length > 0 ? (
-      list.map((item) => (
-        <React.Fragment key={item.id || item._id}>{renderItem(item)}</React.Fragment> // Apply the key directly here
-      ))
+      list.map((item) => {
+        // Use `item.id` or `item._id` if available, otherwise log a warning about missing unique identifiers
+        if (!item.id && !item._id) {
+          console.warn("Item missing a unique 'id' or '_id'. Consider fixing this in the data source.");
+        }
+
+        // Only fallback to `index` if `id` or `_id` is not available, but log a warning to make the issue known
+        return <React.Fragment key={item.id || item._id}>{renderItem(item)}</React.Fragment>;
+      })
     ) : (
       <Col>{emptyMessage}</Col>
     );
@@ -197,7 +203,7 @@ export const MainView = () => {
         renderItem={(movie) => {
           const isFavorite = userInfo.favMovies.includes(movie.id);
           return (
-            <Col className="mb-4" md={4} key={movie.id}>
+            <Col className="mb-4" md={4}>
               <MovieCard movie={movie} isFavorite={isFavorite} onToggleFavorite={toggleFavoriteMovie} />
             </Col>
           );
@@ -209,11 +215,12 @@ export const MainView = () => {
   const renderDirectors = () => (
     <>
       <NavBar user={auth.user} onLogout={handleLogout} />
+      console.log(directors);
       <ListOrMessage
         list={directors}
         renderItem={(director) => (
-          <Col className="mb-4" xs={12} key={director.id}>
-            <DirectorsCard directors={director} />
+          <Col className="mb-4" xs={12}>
+            <DirectorsCard director={director} />
           </Col>
         )}
       />
@@ -226,7 +233,7 @@ export const MainView = () => {
       <ListOrMessage
         list={genres}
         renderItem={(genre) => (
-          <Col className="mb-4" xs={12} key={genre.id}>
+          <Col className="mb-4" xs={12}>
             <GenreCard genres={genre} />
           </Col>
         )}
