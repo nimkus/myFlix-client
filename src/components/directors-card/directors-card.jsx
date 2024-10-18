@@ -14,12 +14,12 @@ export const DirectorsCard = ({ directors }) => {
           <h5 style={{ fontWeight: '600', fontSize: '1.1rem', color: '#333' }}>{directors.name}</h5>
 
           <Card.Text className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>
-            <strong>Born:</strong> {new Date(directors.birthDate).toLocaleDateString()}
+            <strong>Born:</strong> {directors.birthDate}
           </Card.Text>
 
           {directors.deathDate && (
             <Card.Text className="text-muted" style={{ fontSize: '0.85rem' }}>
-              <strong>Died:</strong> {new Date(directors.deathDate).toLocaleDateString()}
+              <strong>Died:</strong> {directors.deathDate}
             </Card.Text>
           )}
         </Card.Body>
