@@ -70,8 +70,38 @@ export const MainView = () => {
     const data = await fetchData(url);
     if (data) {
       setter(data);
+      console.log(setter);
     }
   };
+
+  // Function to toggle favorite Movie
+  const toggleFavoriteMovie = (movieId) => {
+    setUserInfo((prevUserInfo) => {
+      const updatedFavMovies = prevUserInfo.favMovies.includes(movieId)
+        ? prevUserInfo.favMovies.filter((id) => id !== movieId) // Remove
+        : [...prevUserInfo.favMovies, movieId]; // Add
+
+      return {
+        ...prevUserInfo,
+        favMovies: updatedFavMovies,
+      };
+    });
+  };
+
+  // Function to handle rendering a list or a fallback message
+  const ListOrMessage = ({ list, renderItem, emptyMessage = 'List is loading or empty' }) => {
+    return list.length > 0 ? (
+      list.map((item) => (
+        <React.Fragment key={item.id || item._id}>{renderItem(item)}</React.Fragment> // Apply the key directly here
+      ))
+    ) : (
+      <Col>{emptyMessage}</Col>
+    );
+  };
+
+  /**
+   * Route rendering
+   */
 
   // Fetch movies, directors, genres, and user info when component mounts or auth changes
   useEffect(() => {
@@ -95,7 +125,6 @@ export const MainView = () => {
           featured: movie.featured,
         }));
 
-        console.log(moviesFromApi);
         setMovies(moviesFromApi);
       });
 
@@ -109,7 +138,6 @@ export const MainView = () => {
           deathDate: director.date_of_death ? new Date(director.date_of_death).toLocaleDateString() : null,
         }));
 
-        console.log(directorsFromApi);
         setDirectors(directorsFromApi);
       });
 
@@ -121,7 +149,6 @@ export const MainView = () => {
           description: genre.description,
         }));
 
-        console.log(genresFromApi);
         setGenres(genresFromApi);
       });
 
@@ -136,19 +163,19 @@ export const MainView = () => {
           favMovies: data.favMovies,
         };
 
-        console.log(userInfoFromApi);
         setUserInfo(userInfoFromApi);
       });
     }
   }, [auth.user, auth.token]);
 
-  // Route render functions
+  // Signup
   const renderSignup = () => (
     <Col md={5}>
       <SignupView />
     </Col>
   );
 
+  // Login
   const renderLogin = () => (
     <Col md={5}>
       <LoginView
@@ -161,19 +188,7 @@ export const MainView = () => {
     </Col>
   );
 
-  const toggleFavoriteMovie = (movieId) => {
-    setUserInfo((prevUserInfo) => {
-      const updatedFavMovies = prevUserInfo.favMovies.includes(movieId)
-        ? prevUserInfo.favMovies.filter((id) => id !== movieId) // Remove
-        : [...prevUserInfo.favMovies, movieId]; // Add
-
-      return {
-        ...prevUserInfo,
-        favMovies: updatedFavMovies,
-      };
-    });
-  };
-
+  // Render ALL movies, directors, genres
   const renderMovies = () => (
     <>
       <NavBar user={auth.user} onLogout={handleLogout} />
@@ -191,12 +206,6 @@ export const MainView = () => {
     </>
   );
 
-  const renderSingleMovie = () => (
-    <Col md={8}>
-      <MovieView movies={movies} toggleFavoriteMovie={toggleFavoriteMovie} userFavorites={userInfo.favMovies} />
-    </Col>
-  );
-
   const renderDirectors = () => (
     <>
       <NavBar user={auth.user} onLogout={handleLogout} />
@@ -210,20 +219,6 @@ export const MainView = () => {
       />
     </>
   );
-
-  const renderSingleDirector = () => {
-    if (directors.length === 0) {
-      // Directors data is still loading or empty
-      return <p>Loading director information...</p>;
-    }
-
-    // Proceed to render DirectorsView once directors data is loaded
-    return (
-      <Col md={8}>
-        <DirectorsView directors={directors} />
-      </Col>
-    );
-  };
 
   const renderGenres = () => (
     <>
@@ -239,13 +234,28 @@ export const MainView = () => {
     </>
   );
 
+  // Render SINGLE movie, director, genre, user
+  const renderSingleMovie = () => (
+    <Col md={8}>
+      <MovieView movies={movies} toggleFavoriteMovie={toggleFavoriteMovie} userFavorites={userInfo.favMovies} />
+    </Col>
+  );
+
+  const renderSingleDirector = () => {
+    if (directors.length === 0) {
+      return <p>Loading director information...</p>;
+    }
+    return (
+      <Col md={8}>
+        <DirectorsView directors={directors} />
+      </Col>
+    );
+  };
+
   const renderSingleGenre = () => {
     if (genres.length === 0) {
-      // Genres data is still loading or empty
       return <p>Loading genre information...</p>;
     }
-
-    // Proceed to render GenreView once genre data is loaded
     return (
       <Col md={8}>
         <GenreView genres={genres} />
@@ -257,17 +267,11 @@ export const MainView = () => {
     if (userInfo.length === 0) {
       return <p>Loading user information...</p>;
     }
-
     return (
       <Col md={8}>
         <UserEditView userInfo={userInfo} movies={movies} toggleFavoriteMovie={toggleFavoriteMovie} />
       </Col>
     );
-  };
-
-  // Component to handle rendering a list or a fallback message
-  const ListOrMessage = ({ list, renderItem, emptyMessage = 'List is loading or empty' }) => {
-    return list.length > 0 ? list.map(renderItem) : <Col>{emptyMessage}</Col>;
   };
 
   // ProtectedRoute component to handle authentication
