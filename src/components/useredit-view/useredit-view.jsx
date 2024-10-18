@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Form, Button, Row, Col } from 'react-bootstrap';
+import { Card, Form, Button, Row, Col, Modal } from 'react-bootstrap'; // Added Modal here
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { MdEditNote } from 'react-icons/md';
@@ -59,6 +59,9 @@ export const UserEditView = ({ userInfo, movies, toggleFavoriteMovie }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [showPasswords, setShowPasswords] = useState(false); // New state for password visibility
+  const [successMessage, setSuccessMessage] = useState(''); // New state for feedback message
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // Add modal visibility state
+  const [deleteError, setDeleteError] = useState(''); // Add delete error state
 
   const navigate = useNavigate();
 
@@ -112,8 +115,6 @@ export const UserEditView = ({ userInfo, movies, toggleFavoriteMovie }) => {
 
     setFormErrors((prevErrors) => ({ ...prevErrors, [field]: errorMessage }));
   };
-
-  const [successMessage, setSuccessMessage] = useState(''); // New state for feedback message
 
   const handleSave = async (event) => {
     event.preventDefault();
@@ -203,6 +204,53 @@ export const UserEditView = ({ userInfo, movies, toggleFavoriteMovie }) => {
     setSuccessMessage(''); // Clear any existing success or error messages
   };
 
+  const handleDelete = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You need to be logged in to perform this action.');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${originalData.username}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Clear any authentication tokens or user-related info in localStorage
+        try {
+          localStorage.removeItem('token'); // Remove token
+          localStorage.removeItem('user'); // Remove user info
+          sessionStorage.clear(); // Clear session storage (if used)
+        } catch (error) {
+          console.error('Error clearing local or session storage:', error);
+        }
+        setDeleteError(''); // Clear any previous errors
+        window.location.reload(); // Forces a full reload of the page to clear any cached state
+      } else {
+        const contentType = response.headers.get('Content-Type');
+        let errorMessage = 'Failed to delete the profile. Please try again.';
+
+        if (contentType && contentType.includes('application/json')) {
+          const errorDetails = await response.json();
+          errorMessage = errorDetails.message || errorMessage;
+        }
+
+        setDeleteError(errorMessage); // Set the delete error message
+      }
+    } catch (error) {
+      console.error('Error deleting profile:', error);
+      setDeleteError('Network or server error while deleting profile.');
+    }
+  };
+
   const renderProfileField = (label, field, value) => (
     <Row className="mb-4" key={field}>
       <Col>
@@ -250,7 +298,6 @@ export const UserEditView = ({ userInfo, movies, toggleFavoriteMovie }) => {
               )}
             </>
           ) : (
-            // Display as plain text when not editing
             <Form.Control
               plaintext
               readOnly
@@ -285,6 +332,22 @@ export const UserEditView = ({ userInfo, movies, toggleFavoriteMovie }) => {
             </span>
           </div>
         )}
+
+        {/* Confirmation Modal */}
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Profile Deletion</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>Are you sure you want to delete your profile? This action is irreversible.</Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Delete Profile
+            </Button>
+          </Modal.Footer>
+        </Modal>
 
         <Form>
           {renderProfileField('Username', 'username', userData.username)}
@@ -330,33 +393,37 @@ export const UserEditView = ({ userInfo, movies, toggleFavoriteMovie }) => {
                 <Button variant="outline-primary" className="px-4 rounded-pill" onClick={resetForm}>
                   Cancel
                 </Button>
+
+                {/* Red delete button */}
+                <Button variant="danger" className="px-4 rounded-pill ms-3" onClick={() => setShowDeleteModal(true)}>
+                  Delete Profile
+                </Button>
+
+                {deleteError && <p className="text-danger mt-2">{deleteError}</p>}
               </>
             )}
           </div>
         </Form>
 
-        {/* Move the Favorite Movies section here */}
         {!isEditing && (
-          <>
-            <Row className="mb-4 mt-4">
-              <Col>
-                <h5>Favorite Movies</h5>
-                {userData.favMovies && userData.favMovies.length > 0 ? (
-                  <Row>
-                    {movies
-                      .filter((movie) => userData.favMovies.includes(movie.id))
-                      .map((favMovie) => (
-                        <Col key={favMovie.id} md={4}>
-                          <MovieCard movie={favMovie} isFavorite={true} onToggleFavorite={handleToggleFavorite} />
-                        </Col>
-                      ))}
-                  </Row>
-                ) : (
-                  <p>None</p>
-                )}
-              </Col>
-            </Row>
-          </>
+          <Row className="mb-4 mt-4">
+            <Col>
+              <h5>Favorite Movies</h5>
+              {userData.favMovies && userData.favMovies.length > 0 ? (
+                <Row>
+                  {movies
+                    .filter((movie) => userData.favMovies.includes(movie.id))
+                    .map((favMovie) => (
+                      <Col key={favMovie.id} md={4}>
+                        <MovieCard movie={favMovie} isFavorite={true} onToggleFavorite={handleToggleFavorite} />
+                      </Col>
+                    ))}
+                </Row>
+              ) : (
+                <p>None</p>
+              )}
+            </Col>
+          </Row>
         )}
       </Card.Body>
     </Card>
