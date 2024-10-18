@@ -103,7 +103,7 @@ export const SignupView = () => {
   return (
     <Form
       onSubmit={handleSubmit}
-      className="mt-4 p-4 border rounded shadow-sm"
+      className="mt-4 p-4 border rounded shadow-s bg-light"
       style={{ maxWidth: '400px', margin: '0 auto' }}
     >
       <h3 className="text-center mb-4">Sign Up</h3>
@@ -154,6 +154,7 @@ export const SignupView = () => {
           value={formValues.birthday}
           onChange={(e) => handleChange('birthday', e.target.value)}
           isInvalid={!!formErrors.birthday}
+          max="9999-12-31"
           required
         />
         <Form.Control.Feedback type="invalid">{formErrors.birthday}</Form.Control.Feedback>
