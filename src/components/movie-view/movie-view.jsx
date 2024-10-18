@@ -1,12 +1,21 @@
+import React from 'react';
 import { useParams } from 'react-router';
-import { Card, Button, Row, Col } from 'react-bootstrap';
+import { Card, Button, Row, Col, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { BsHeart, BsHeartFill } from 'react-icons/bs';
 
-export const MovieView = ({ movies }) => {
+export const MovieView = ({ movies, toggleFavoriteMovie, userFavorites }) => {
   const { movieId } = useParams();
   const movie = movies.find((m) => m.id === movieId);
 
   if (!movie) return <p>Loading movie information...</p>;
+
+  // Determine if the movie is a favorite
+  const isFavorite = userFavorites.includes(movie.id);
+
+  const handleToggleFavorite = () => {
+    toggleFavoriteMovie(movie.id);
+  };
 
   return (
     <Card className="p-4 my-3 border-0" style={{ maxWidth: '700px', margin: 'auto' }}>
@@ -69,12 +78,32 @@ export const MovieView = ({ movies }) => {
         </h5>
         <Card.Text style={{ lineHeight: '1.6', color: '#444' }}>{movie.description}</Card.Text>
 
-        <div className="text-center mt-4">
-          <Link to={`/`}>
-            <Button variant="outline-primary" className="px-4" style={{ borderRadius: '20px' }}>
-              Back
-            </Button>
-          </Link>
+        <div className="mt-4 d-flex justify-content-center">
+          <Row className="align-items-center">
+            <Col xs="auto">
+              <OverlayTrigger
+                placement="top"
+                overlay={<Tooltip>{isFavorite ? 'Remove from favorites' : 'Add to favorites'}</Tooltip>}
+              >
+                <Button
+                  variant="link"
+                  className="p-0"
+                  onClick={handleToggleFavorite}
+                  style={{ color: 'var(--bs-primary)', fontSize: '1.5rem' }}
+                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  {isFavorite ? <BsHeartFill aria-hidden="true" /> : <BsHeart aria-hidden="true" />}
+                </Button>
+              </OverlayTrigger>
+            </Col>
+            <Col xs="auto">
+              <Link to={`/`}>
+                <Button variant="outline-primary" className="px-4" style={{ borderRadius: '20px' }}>
+                  Back
+                </Button>
+              </Link>
+            </Col>
+          </Row>
         </div>
       </Card.Body>
     </Card>
