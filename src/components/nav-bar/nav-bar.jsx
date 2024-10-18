@@ -22,7 +22,7 @@ export const NavBar = ({ user, onLogout }) => {
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav variant="underline" className="me-auto">
+          <Nav className="me-auto">
             <Nav.Link as={Link} to="/" className="fw-bold">
               Movies
             </Nav.Link>
@@ -44,7 +44,9 @@ export const NavBar = ({ user, onLogout }) => {
                   Signed in as: <strong className="ms-2">{user.username}</strong>
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
-                  <Dropdown.Item>Profile</Dropdown.Item>
+                  <Dropdown.Item as={Link} to={`/users/${user.username}`}>
+                    Profile
+                  </Dropdown.Item>
                   <Dropdown.Divider /> {/* Bootstrap-style divider */}
                   <Dropdown.Item onClick={handleLogout} className="text-success">
                     <strong>Logout</strong> {/* Stronger font for emphasis */}
