@@ -21,8 +21,10 @@ export const MainView = () => {
   const { user, token } = auth;
 
   const handleLogout = () => {
+    // Clear user-specific data.
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     setAuth({ user: null, token: null });
-    localStorage.clear();
   };
 
   // State to store data fetched from the API
@@ -71,12 +73,11 @@ export const MainView = () => {
     }
   };
 
-  // Fetch movies when the component mounts or when the token changes
+  // Fetch movies, directors, genres, and user info when component mounts or auth changes
   useEffect(() => {
     if (auth.user && auth.token) {
-      const url = 'https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies';
-
-      fetchAndSetState(url, (data) => {
+      // fetch movies
+      fetchAndSetState('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies', (data) => {
         const moviesFromApi = data.map((movie) => ({
           id: movie._id,
           title: movie.title,
@@ -97,15 +98,9 @@ export const MainView = () => {
         console.log(moviesFromApi);
         setMovies(moviesFromApi);
       });
-    }
-  }, [auth.user, auth.token]);
 
-  // Fetch directors when the component mounts or when the token changes
-  useEffect(() => {
-    if (auth.user && auth.token) {
-      const url = 'https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/directors/all';
-
-      fetchAndSetState(url, (data) => {
+      //fetch directors
+      fetchAndSetState('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/directors/all', (data) => {
         const directorsFromApi = data.map((director) => ({
           id: director._id,
           name: director.name,
@@ -117,15 +112,9 @@ export const MainView = () => {
         console.log(directorsFromApi);
         setDirectors(directorsFromApi);
       });
-    }
-  }, [auth.user, auth.token]);
 
-  // Fetch genre when the component mounts or when the token changes
-  useEffect(() => {
-    if (auth.user && auth.token) {
-      const url = 'https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/genres/all';
-
-      fetchAndSetState(url, (data) => {
+      // Fetch genres
+      fetchAndSetState('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/genres/all', (data) => {
         const genresFromApi = data.map((genre) => ({
           id: genre._id,
           name: genre.name,
@@ -135,15 +124,9 @@ export const MainView = () => {
         console.log(genresFromApi);
         setGenres(genresFromApi);
       });
-    }
-  }, [auth.user, auth.token]);
 
-  // Fetch info of current user
-  useEffect(() => {
-    if (auth.user && auth.token) {
-      const url = `https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${auth.user.username}`;
-
-      fetchAndSetState(url, (data) => {
+      // Fetch info of current user
+      fetchAndSetState(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${auth.user.username}`, (data) => {
         const userInfoFromApi = {
           id: data._id,
           username: data.username,
