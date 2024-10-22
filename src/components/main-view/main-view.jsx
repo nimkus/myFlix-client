@@ -9,7 +9,7 @@ import { GenreCard } from '../genre-card/genre-card.jsx';
 import { GenreView } from '../genre-view/genre-view.jsx';
 import { ProfileView } from '../profile-view/profile-view.jsx';
 import { NavBar } from '../nav-bar/nav-bar';
-import { Row, Col } from 'react-bootstrap';
+import { Row, Col, Button } from 'react-bootstrap';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 
 export const MainView = () => {
@@ -29,6 +29,7 @@ export const MainView = () => {
 
   // State to store data fetched from the API
   const [movies, setMovies] = useState([]);
+  const [page, setPage] = useState(1);
   const [directors, setDirectors] = useState([]);
   const [genres, setGenres] = useState([]);
   const [userInfo, setUserInfo] = useState([]);
@@ -112,7 +113,7 @@ export const MainView = () => {
   useEffect(() => {
     if (auth.user && auth.token) {
       // fetch movies
-      fetchAndSetState('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies', (data) => {
+      fetchAndSetState(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies?page=${page}&limit=6`, (data) => {
         const moviesFromApi = data.map((movie) => ({
           id: movie._id,
           title: movie.title,
@@ -171,7 +172,7 @@ export const MainView = () => {
         setUserInfo(userInfoFromApi);
       });
     }
-  }, [auth.user, auth.token]);
+  }, [auth.user, auth.token, page]);
 
   // Signup
   const renderSignup = () => (
@@ -208,6 +209,29 @@ export const MainView = () => {
           );
         }}
       />
+      <Row className="d-flex justify-content-center">
+        {/* Conditionally render the "Previous" button */}
+        {page > 1 && (
+          <Button
+            variant="outline-primary"
+            className="px-4 rounded-pill mx-2 w-auto"
+            aria-label="Go to previous page"
+            onClick={() => setPage((prevPage) => prevPage - 1)}
+          >
+            Previous Page
+          </Button>
+        )}
+
+        {/* "Next" button */}
+        <Button
+          variant="outline-primary"
+          className="px-4 rounded-pill mx-2 w-auto"
+          aria-label="Go to next page"
+          onClick={() => setPage((prevPage) => prevPage + 1)}
+        >
+          Next Page
+        </Button>
+      </Row>
     </>
   );
 
