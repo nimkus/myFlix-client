@@ -13,6 +13,7 @@ import { Row, Col, Button } from 'react-bootstrap';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 
 export const MainView = () => {
+  // User Authentication
   const [auth, setAuth] = useState(() => ({
     user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('token') || null,
@@ -30,9 +31,11 @@ export const MainView = () => {
   // State to store data fetched from the API
   const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [directors, setDirectors] = useState([]);
   const [genres, setGenres] = useState([]);
   const [userInfo, setUserInfo] = useState([]);
+  const [favoriteMovies, setFavoriteMovies] = useState([]);
 
   /**
    * Generalized function to fetch data from an API endpoint with authentication
@@ -63,14 +66,36 @@ export const MainView = () => {
   };
 
   /**
-   * Wrapper function for fetching data and updating component state
-   * @param {string} url - The API endpoint
-   * @param {function} setter - State setter function to update the corresponding state
+   * Fetches data from an API endpoint and updates component state.
+   * Optionally handles pagination if applicable.
+   *
+   * @param {string} url - The API endpoint.
+   * @param {function} setData - State setter function to update the component's data (array or object).
+   * @param {function} [handlePagination=null] - Optional pagination handler function to update pagination state (totalPages, currentPage).
    */
-  const fetchAndSetState = async (url, setter) => {
-    const data = await fetchData(url);
-    if (data) {
-      setter(data);
+  const fetchAndSetState = async (url, setData, handlePagination = null) => {
+    try {
+      const result = await fetchData(url);
+
+      if (result) {
+        // Check if the response contains pagination info (totalPages, currentPage)
+        if (result.totalPages && result.currentPage) {
+          const { data: list, totalPages, currentPage } = result;
+          setData(list); // Set the array data (movies, genres, etc.)
+
+          // If pagination is needed, call the pagination handler
+          if (handlePagination) {
+            handlePagination(totalPages, currentPage); // Update pagination data
+          }
+        } else {
+          // If there is no pagination info, treat it as a single entry
+          setData(result); // Set the single data object (even if it contains arrays)
+        }
+      } else {
+        console.warn('No data received from fetch');
+      }
+    } catch (error) {
+      console.error('Error fetching data from:', url, error);
     }
   };
 
@@ -113,26 +138,33 @@ export const MainView = () => {
   useEffect(() => {
     if (auth.user && auth.token) {
       // fetch movies
-      fetchAndSetState(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies?page=${page}&limit=6`, (data) => {
-        const moviesFromApi = data.map((movie) => ({
-          id: movie._id,
-          title: movie.title,
-          year: movie.year,
-          genre: movie.genre,
-          genreName: movie.genre?.length > 0 ? movie.genre.map((g) => g.name).join(', ') : 'No genre available',
-          director: movie.director,
-          directorName:
-            movie.director?.length > 0 ? movie.director.map((d) => d.name).join(', ') : 'No director available',
-          imdb_rating: movie.imdb_rating,
-          duration: movie.duration,
-          language: movie.language,
-          description: movie.description,
-          image: movie.imagePath,
-          featured: movie.featured,
-        }));
+      fetchAndSetState(
+        `https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies?page=${page}`,
+        (data) => {
+          const moviesFromApi = data.map((movie) => ({
+            id: movie._id,
+            title: movie.title,
+            year: movie.year,
+            genre: movie.genre,
+            genreName: movie.genre?.length > 0 ? movie.genre.map((g) => g.name).join(', ') : 'No genre available',
+            director: movie.director,
+            directorName:
+              movie.director?.length > 0 ? movie.director.map((d) => d.name).join(', ') : 'No director available',
+            imdb_rating: movie.imdb_rating,
+            duration: movie.duration,
+            language: movie.language,
+            description: movie.description,
+            image: movie.imagePath,
+            featured: movie.featured,
+          }));
 
-        setMovies(moviesFromApi);
-      });
+          setMovies(moviesFromApi);
+        },
+        (totalPages, currentPage) => {
+          setTotalPages(totalPages); // Set the total number of pages
+          setPage(currentPage); // Set the current page
+        }
+      );
 
       //fetch directors
       fetchAndSetState('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/directors/all', (data) => {
@@ -170,7 +202,10 @@ export const MainView = () => {
         };
 
         setUserInfo(userInfoFromApi);
+        setFavoriteMovies(userInfoFromApi.favMovies);
       });
+    } else {
+      console.warn('Error fetching data.');
     }
   }, [auth.user, auth.token, page]);
 
@@ -209,8 +244,8 @@ export const MainView = () => {
           );
         }}
       />
-      <Row className="d-flex justify-content-center">
-        {/* Conditionally render the "Previous" button */}
+      <Row className="d-flex justify-content-center mb-4">
+        {/* Conditionally render the "Previous page" button */}
         {page > 1 && (
           <Button
             variant="outline-primary"
@@ -221,16 +256,17 @@ export const MainView = () => {
             Previous Page
           </Button>
         )}
-
-        {/* "Next" button */}
-        <Button
-          variant="outline-primary"
-          className="px-4 rounded-pill mx-2 w-auto"
-          aria-label="Go to next page"
-          onClick={() => setPage((prevPage) => prevPage + 1)}
-        >
-          Next Page
-        </Button>
+        {/* Conditionally render the "Next page" button */}
+        {page < totalPages && totalPages > 1 && (
+          <Button
+            variant="outline-primary"
+            className="px-4 rounded-pill mx-2 w-auto"
+            aria-label="Go to next page"
+            onClick={() => setPage((prevPage) => prevPage + 1)}
+          >
+            Next Page
+          </Button>
+        )}
       </Row>
     </>
   );
@@ -298,7 +334,7 @@ export const MainView = () => {
     }
     return (
       <Col md={8}>
-        <ProfileView userInfo={userInfo} movies={movies} toggleFavoriteMovie={toggleFavoriteMovie} />
+        <ProfileView userInfo={userInfo} favoriteMovies={favoriteMovies} toggleFavoriteMovie={toggleFavoriteMovie} />
       </Col>
     );
   };

@@ -54,7 +54,7 @@ export const MovieCard = ({ movie, isFavorite, onToggleFavorite }) => {
       if (!response.ok) {
         throw new Error(`Failed to update favorites: ${response.statusText}`);
       }
-
+      console.log(response);
       onToggleFavorite(movie.id); // Update the favorites list in the parent component
     } catch (error) {
       console.error('Error updating favorites:', error);
@@ -62,8 +62,8 @@ export const MovieCard = ({ movie, isFavorite, onToggleFavorite }) => {
   };
 
   return (
-    <Card ref={cardRef} className="h-100 bg-light rounded-0 position-relative">
-      <Card.Img variant="top" src={movie.image} />
+    <Card ref={cardRef} className="h-100 bg-light rounded-3 position-relative shadow-sm" style={{ border: 'none' }}>
+      <Card.Img variant="top" src={movie.image} className="bg-secondary" />
       <Card.Body>
         <Card.Title>{movie.title}</Card.Title>
 

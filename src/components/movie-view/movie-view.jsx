@@ -37,7 +37,15 @@ export const MovieView = ({ movies, toggleFavoriteMovie, userFavorites }) => {
             <p className="text-muted mb-1" style={{ fontSize: '0.9rem' }}>
               Genre(s)
             </p>
-            <p className="text-dark">{movie.genreName}</p>
+            {/* Iterate through genres and create separate links for each genre */}
+            <div>
+              {movie.genreName &&
+                movie.genreName.map((genre, index) => (
+                  <Link key={index} to={`/movies/genres/${encodeURIComponent(genre)}`}>
+                    {genre}
+                  </Link>
+                ))}
+            </div>
           </Col>
         </Row>
 

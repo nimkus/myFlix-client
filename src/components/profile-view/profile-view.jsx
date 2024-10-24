@@ -1,21 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Form, Button, Row, Col, Modal } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { MdEditNote } from 'react-icons/md';
 import { MovieCard } from '../movie-card/movie-card.jsx';
 
 // UserEditView component handles profile editing, including password change, deletion, and displaying favorite movies
-export const ProfileView = ({ userInfo, movies, toggleFavoriteMovie }) => {
-  // Filter the list of favorite movies from the movies prop based on user information
-  const favoriteMovies = movies.filter((movie) => userInfo.favMovies.includes(movie.id));
-
-  // Handles toggling of favorite movie status
-  const handleToggleFavorite = (movieId) => {
-    toggleFavoriteMovie(movieId);
-  };
-
-  // Format date for input fields in 'YYYY-MM-DD' format
+export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
+  // Function to format date for input fields in 'YYYY-MM-DD' format
   const formatDateForInput = (date) => {
     if (!date) return '';
     const d = new Date(date);
@@ -23,7 +15,7 @@ export const ProfileView = ({ userInfo, movies, toggleFavoriteMovie }) => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
-  // Format date for display in 'DD-MM-YYYY' format
+  // Function to format date for display in 'DD-MM-YYYY' format
   const formatDateForDisplay = (date) => {
     if (!date) return 'Not set';
     const d = new Date(date);
@@ -31,19 +23,22 @@ export const ProfileView = ({ userInfo, movies, toggleFavoriteMovie }) => {
     return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
   };
 
+  // Get name of logged in user and token from local storage
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  // Get username from URL
+  const { username } = useParams();
+
+  // State to store data fetched from the API
+  const [userInfo, setUserInfo] = useState([]); // user data fetched from the server,
+
   // State management for user information, passwords, and form errors
-  const [userData, setUserData] = useState({
-    ...userInfo,
-    birthday: formatDateForInput(userInfo.birthday),
-  });
-  const [tempData, setTempData] = useState({
-    ...userInfo,
-    birthday: formatDateForInput(userInfo.birthday),
-  });
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-  });
+  const [userData, setUserData] = useState({ ...userInfo, birthday: formatDateForInput(userInfo.birthday) });
+  const [tempData, setTempData] = useState({ ...userInfo, birthday: formatDateForInput(userInfo.birthday) });
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
+
+  // State to store form data
   const [formErrors, setFormErrors] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
@@ -53,6 +48,50 @@ export const ProfileView = ({ userInfo, movies, toggleFavoriteMovie }) => {
   const [deleteError, setDeleteError] = useState(''); // Delete error handling
 
   const navigate = useNavigate();
+
+  // Getting user data from API
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user && user.username && user.username === username) {
+        try {
+          const response = await fetch(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${user.username}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            setUserInfo(result);
+
+            // Update userData and tempData to reflect the fetched info
+            setUserData({
+              ...result,
+              birthday: formatDateForInput(result.birthday),
+            });
+            setTempData({
+              ...result,
+              birthday: formatDateForInput(result.birthday),
+            });
+          } else {
+            console.error(`Could not fetch user data: ${response.status} ${response.statusText}`);
+          }
+        } catch (error) {
+          console.error('Network or server error:', error);
+        }
+      } else {
+        console.error('User or username is not available');
+      }
+    };
+    fetchUserData();
+  }, [token, username]);
+
+  // Handles toggling of favorite movie status
+  const handleToggleFavorite = (movieId) => {
+    toggleFavoriteMovie(movieId);
+  };
 
   // Handle changes in form inputs and validate them
   const handleChange = (field, value) => {
@@ -109,8 +148,6 @@ export const ProfileView = ({ userInfo, movies, toggleFavoriteMovie }) => {
       alert('Please correct the errors before saving.');
       return;
     }
-
-    const token = localStorage.getItem('token'); // It's safer to use HttpOnly cookies for JWT
     if (!token) {
       alert('You need to be logged in to perform this action.');
       return;
@@ -179,7 +216,6 @@ export const ProfileView = ({ userInfo, movies, toggleFavoriteMovie }) => {
 
   // Handles the deletion of the user profile with API call
   const handleDelete = async () => {
-    const token = localStorage.getItem('token');
     if (!token) {
       alert('You need to be logged in to perform this action.');
       return;
@@ -300,135 +336,139 @@ export const ProfileView = ({ userInfo, movies, toggleFavoriteMovie }) => {
   return (
     <Card className="p-4 my-3 border-0" style={{ maxWidth: '700px', margin: 'auto' }}>
       <Card.Body>
-        <h2 className="text-center mb-3">{userData.username}</h2>
-        <hr className="my-4" />
+        {!userInfo.username ? (
+          <p>Loading profile...</p> // Add a loading state to handle the fetch delay
+        ) : (
+          <>
+            <h2 className="text-center mb-3">{userData.username}</h2>
+            <hr className="my-4" />
 
-        {successMessage && (
-          <div className="text-center mb-3">
-            <span className={`text-${successMessage.includes('successfully') ? 'success' : 'danger'}`}>
-              {successMessage}
-            </span>
-          </div>
-        )}
+            {successMessage && (
+              <div className="text-center mb-3">
+                <span className={`text-${successMessage.includes('successfully') ? 'success' : 'danger'}`}>
+                  {successMessage}
+                </span>
+              </div>
+            )}
 
-        {/* Confirmation Modal for profile deletion */}
-        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Confirm Profile Deletion</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>Are you sure you want to delete your profile? This action is irreversible.</Modal.Body>
-          <Modal.Footer>
-            <Button variant="danger" onClick={handleDelete} className="rounded-pill">
-              Delete Profile
-            </Button>
-            <Button variant="secondary" onClick={() => setShowDeleteModal(false)} className="rounded-pill">
-              Cancel
-            </Button>
-          </Modal.Footer>
-        </Modal>
+            {/* Confirmation Modal for profile deletion */}
+            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+              <Modal.Header closeButton>
+                <Modal.Title>Confirm Profile Deletion</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>Are you sure you want to delete your profile? This action is irreversible.</Modal.Body>
+              <Modal.Footer>
+                <Button variant="danger" onClick={handleDelete} className="rounded-pill">
+                  Delete Profile
+                </Button>
+                <Button variant="secondary" onClick={() => setShowDeleteModal(false)} className="rounded-pill">
+                  Cancel
+                </Button>
+              </Modal.Footer>
+            </Modal>
 
-        <Form>
-          {renderProfileField('Username', 'username', userData.username)}
-          {renderProfileField('Email', 'email', userData.email)}
-          {renderProfileField('Birthday', 'birthday', userData.birthday)}
+            <Form>
+              {renderProfileField('Username', 'username', userData.username)}
+              {renderProfileField('Email', 'email', userData.email)}
+              {renderProfileField('Birthday', 'birthday', userData.birthday)}
 
-          {isEditing && (
-            <>
-              {/* Change Password Toggle */}
-              <Button
-                variant="link"
-                className="mb-3"
-                onClick={() => setShowPasswordFields(!showPasswordFields)}
-                aria-label={showPasswordFields ? 'Hide password fields' : 'Show password fields'}
-              >
-                {showPasswordFields ? 'Hide Password Fields' : 'Change Password'}
-              </Button>
-
-              {/* Password Fields */}
-              {showPasswordFields && (
+              {isEditing && (
                 <>
-                  {renderProfileField('Current Password', 'currentPassword', passwordData.currentPassword)}
-                  {renderProfileField('New Password', 'newPassword', passwordData.newPassword)}
+                  {/* Change Password Toggle */}
+                  <Button
+                    variant="link"
+                    className="mb-3"
+                    onClick={() => setShowPasswordFields(!showPasswordFields)}
+                    aria-label={showPasswordFields ? 'Hide password fields' : 'Show password fields'}
+                  >
+                    {showPasswordFields ? 'Hide Password Fields' : 'Change Password'}
+                  </Button>
+
+                  {/* Password Fields */}
+                  {showPasswordFields && (
+                    <>
+                      {renderProfileField('Current Password', 'currentPassword', passwordData.currentPassword)}
+                      {renderProfileField('New Password', 'newPassword', passwordData.newPassword)}
+                    </>
+                  )}
+
+                  {/* Delete Profile Button */}
+                  <Button
+                    variant="link"
+                    className="text-danger mb-3"
+                    onClick={() => setShowDeleteModal(true)}
+                    aria-label="Delete profile"
+                  >
+                    Delete Profile
+                  </Button>
                 </>
               )}
 
-              {/* Delete Profile Button */}
-              <Button
-                variant="link"
-                className="text-danger mb-3"
-                onClick={() => setShowDeleteModal(true)}
-                aria-label="Delete profile"
-              >
-                Delete Profile
-              </Button>
-            </>
-          )}
+              <hr className="my-4" />
 
-          <hr className="my-4" />
+              <div className="text-end">
+                {!isEditing ? (
+                  <>
+                    <Button
+                      variant="primary"
+                      className="px-4 me-3 rounded-pill"
+                      onClick={() => setIsEditing(true)}
+                      aria-label="Edit profile"
+                    >
+                      <MdEditNote className="me-1 mb-1" />
+                      Edit
+                    </Button>
+                    <Link to={'/'}>
+                      <Button variant="outline-primary" className="px-4 rounded-pill" aria-label="Go back to main page">
+                        Back
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={handleSave}
+                      variant="primary"
+                      className="px-4 me-3 rounded-pill"
+                      aria-label="Save changes"
+                    >
+                      Save Changes
+                    </Button>
 
-          <div className="text-end">
-            {!isEditing ? (
-              <>
-                <Button
-                  variant="primary"
-                  className="px-4 me-3 rounded-pill"
-                  onClick={() => setIsEditing(true)}
-                  aria-label="Edit profile"
-                >
-                  <MdEditNote className="me-1 mb-1" />
-                  Edit
-                </Button>
-                <Link to={'/'}>
-                  <Button variant="outline-primary" className="px-4 rounded-pill" aria-label="Go back to main page">
-                    Back
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  variant="primary"
-                  className="px-4 me-3 rounded-pill"
-                  aria-label="Save changes"
-                >
-                  Save Changes
-                </Button>
+                    <Button
+                      variant="outline-primary"
+                      className="px-4 rounded-pill"
+                      onClick={resetForm}
+                      aria-label="Cancel editing"
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                )}
+              </div>
+            </Form>
 
-                <Button
-                  variant="outline-primary"
-                  className="px-4 rounded-pill"
-                  onClick={resetForm}
-                  aria-label="Cancel editing"
-                >
-                  Cancel
-                </Button>
-              </>
+            {/* Display favorite movies only if not editing */}
+            {!isEditing && (
+              <Row className="mb-4 mt-4">
+                <Col>
+                  <h5>Favorite Movies</h5>
+                  {userData.favMovies && userData.favMovies.length > 0 ? (
+                    <Row>
+                      {favoriteMovies.map((favMovie) => (
+                        <Col key={favMovie.id} md={4}>
+                          <MovieCard movie={favMovie} isFavorite={true} onToggleFavorite={handleToggleFavorite} />
+                        </Col>
+                      ))}
+                    </Row>
+                  ) : (
+                    <p>None</p>
+                  )}
+                </Col>
+              </Row>
             )}
-          </div>
-        </Form>
-
-        {/* Display favorite movies only if not editing */}
-        {!isEditing && (
-          <Row className="mb-4 mt-4">
-            <Col>
-              <h5>Favorite Movies</h5>
-              {userData.favMovies && userData.favMovies.length > 0 ? (
-                <Row>
-                  {movies
-                    .filter((movie) => userData.favMovies.includes(movie.id))
-                    .map((favMovie) => (
-                      <Col key={favMovie.id} md={4}>
-                        <MovieCard movie={favMovie} isFavorite={true} onToggleFavorite={handleToggleFavorite} />
-                      </Col>
-                    ))}
-                </Row>
-              ) : (
-                <p>None</p>
-              )}
-            </Col>
-          </Row>
+          </>
         )}
       </Card.Body>
     </Card>
