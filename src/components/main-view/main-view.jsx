@@ -21,13 +21,6 @@ export const MainView = () => {
 
   const { user, token } = auth;
 
-  const handleLogout = () => {
-    // Clear user-specific data.
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    setAuth({ user: null, token: null });
-  };
-
   // State to store data fetched from the API
   const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
@@ -36,6 +29,13 @@ export const MainView = () => {
   const [genres, setGenres] = useState([]);
   const [userInfo, setUserInfo] = useState([]);
   const [favoriteMovies, setFavoriteMovies] = useState([]);
+
+  const handleLogout = () => {
+    // Clear user-specific data.
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    setAuth({ user: null, token: null });
+  };
 
   /**
    * Generalized function to fetch data from an API endpoint with authentication
@@ -154,7 +154,7 @@ export const MainView = () => {
             duration: movie.duration,
             language: movie.language,
             description: movie.description,
-            image: movie.imagePath,
+            imagePath: movie.imagePath,
             featured: movie.featured,
           }));
 
@@ -334,7 +334,7 @@ export const MainView = () => {
     }
     return (
       <Col md={8}>
-        <ProfileView userInfo={userInfo} favoriteMovies={favoriteMovies} toggleFavoriteMovie={toggleFavoriteMovie} />
+        <ProfileView userData={userInfo} toggleFavoriteMovie={toggleFavoriteMovie} />
       </Col>
     );
   };

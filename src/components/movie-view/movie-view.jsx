@@ -37,13 +37,13 @@ export const MovieView = ({ movies, toggleFavoriteMovie, userFavorites }) => {
             <p className="text-muted mb-1" style={{ fontSize: '0.9rem' }}>
               Genre(s)
             </p>
-            {/* Iterate through genres and create separate links for each genre */}
             <div>
               {movie.genreName &&
-                movie.genreName.map((genre, index) => (
-                  <Link key={index} to={`/movies/genres/${encodeURIComponent(genre)}`}>
-                    {genre}
-                  </Link>
+                movie.genreName.split(',').map((genre, index, array) => (
+                  <React.Fragment key={index}>
+                    <Link to={`/movies/genres/${encodeURIComponent(genre.trim())}`}>{genre.trim()}</Link>
+                    {index < array.length - 1 && ', '}
+                  </React.Fragment>
                 ))}
             </div>
           </Col>

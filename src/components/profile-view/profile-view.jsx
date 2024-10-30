@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Button, Row, Col, Modal } from 'react-bootstrap';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { MdEditNote } from 'react-icons/md';
 import { MovieCard } from '../movie-card/movie-card.jsx';
 
 // UserEditView component handles profile editing, including password change, deletion, and displaying favorite movies
-export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
+export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
   // Function to format date for input fields in 'YYYY-MM-DD' format
   const formatDateForInput = (date) => {
     if (!date) return '';
     const d = new Date(date);
-    if (isNaN(d.getTime())) return ''; // Return empty if the date is invalid
+    if (isNaN(d.getTime())) return '';
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
@@ -19,7 +19,7 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
   const formatDateForDisplay = (date) => {
     if (!date) return 'Not set';
     const d = new Date(date);
-    if (isNaN(d.getTime())) return 'Invalid date'; // Return 'Invalid date' if the date is not valid
+    if (isNaN(d.getTime())) return 'Invalid date';
     return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
   };
 
@@ -27,56 +27,57 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
 
-  // Get username from URL
-  const { username } = useParams();
-
-  // State to store data fetched from the API
-  const [userInfo, setUserInfo] = useState([]); // user data fetched from the server,
-
   // State management for user information, passwords, and form errors
-  const [userData, setUserData] = useState({ ...userInfo, birthday: formatDateForInput(userInfo.birthday) });
-  const [tempData, setTempData] = useState({ ...userInfo, birthday: formatDateForInput(userInfo.birthday) });
+  const [userInfo, setUserInfo] = useState(userData || null);
+  const [tempData, setTempData] = useState(userData || null);
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
+
+  // State management for favortite movies
+  const [favMovies, setFavMovies] = useState([]);
 
   // State to store form data
   const [formErrors, setFormErrors] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
-  const [showPasswords, setShowPasswords] = useState(false); // Toggles password visibility
-  const [successMessage, setSuccessMessage] = useState(''); // Success feedback
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // Modal visibility for delete confirmation
-  const [deleteError, setDeleteError] = useState(''); // Delete error handling
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const navigate = useNavigate();
 
-  // Getting user data from API
+  // Update userInfo and tempData when userData is received
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (user && user.username && user.username === username) {
+    if (userData) {
+      setUserInfo(userData);
+      setTempData({
+        ...userData,
+        birthday: formatDateForInput(userData.birthday),
+      });
+    }
+  }, [userData]);
+
+  // Getting users favorite movies list from API
+  useEffect(() => {
+    const fetchUserInfo = async (page = 1, limit = 6) => {
+      if (user && user.username) {
         try {
-          const response = await fetch(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${user.username}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const response = await fetch(
+            `https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${user.username}/favMoviesAll`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
           if (response.ok) {
             const result = await response.json();
-            setUserInfo(result);
-
-            // Update userData and tempData to reflect the fetched info
-            setUserData({
-              ...result,
-              birthday: formatDateForInput(result.birthday),
-            });
-            setTempData({
-              ...result,
-              birthday: formatDateForInput(result.birthday),
-            });
+            setFavMovies(result.favMovies);
           } else {
-            console.error(`Could not fetch user data: ${response.status} ${response.statusText}`);
+            console.error(`Could not fetch favorite movies: ${response.status} ${response.statusText}`);
           }
         } catch (error) {
           console.error('Network or server error:', error);
@@ -85,8 +86,8 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
         console.error('User or username is not available');
       }
     };
-    fetchUserData();
-  }, [token, username]);
+    fetchUserInfo();
+  }, [token]);
 
   // Handles toggling of favorite movie status
   const handleToggleFavorite = (movieId) => {
@@ -99,7 +100,10 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
       setPasswordData({ ...passwordData, [field]: value });
       validateField(field, value);
     } else {
-      setTempData({ ...tempData, [field]: value });
+      setTempData((prevData) => ({
+        ...prevData,
+        [field]: value,
+      }));
       validateField(field, value);
     }
   };
@@ -165,7 +169,7 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
         updateData.newPassword = passwordData.newPassword;
       }
 
-      const response = await fetch(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${userData.username}`, {
+      const response = await fetch(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${userInfo.username}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -176,7 +180,7 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
 
       if (response.ok) {
         const updatedUser = await response.json();
-        setUserData(updatedUser.user);
+        setUserInfo(updatedUser.user);
         setIsEditing(false); // Return to non-editable mode
         setSuccessMessage('Profile updated successfully!');
       } else {
@@ -203,7 +207,7 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
 
   // Resets the form to its original state
   const resetForm = () => {
-    setTempData(userData); // Reset tempData to the current user data
+    setTempData(userInfo); // Reset tempData to the current user data
     setPasswordData({
       currentPassword: '',
       newPassword: '',
@@ -222,7 +226,7 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
     }
 
     try {
-      const response = await fetch(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${userData.username}`, {
+      const response = await fetch(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${userInfo.username}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -340,7 +344,7 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
           <p>Loading profile...</p> // Add a loading state to handle the fetch delay
         ) : (
           <>
-            <h2 className="text-center mb-3">{userData.username}</h2>
+            <h2 className="text-center mb-3">{userInfo.username}</h2>
             <hr className="my-4" />
 
             {successMessage && (
@@ -368,9 +372,9 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
             </Modal>
 
             <Form>
-              {renderProfileField('Username', 'username', userData.username)}
-              {renderProfileField('Email', 'email', userData.email)}
-              {renderProfileField('Birthday', 'birthday', userData.birthday)}
+              {renderProfileField('Username', 'username', tempData.username)}
+              {renderProfileField('Email', 'email', tempData.email)}
+              {renderProfileField('Birthday', 'birthday', tempData.birthday)}
 
               {isEditing && (
                 <>
@@ -454,11 +458,15 @@ export const ProfileView = ({ favoriteMovies, toggleFavoriteMovie }) => {
               <Row className="mb-4 mt-4">
                 <Col>
                   <h5>Favorite Movies</h5>
-                  {userData.favMovies && userData.favMovies.length > 0 ? (
+                  {favMovies && favMovies.length > 0 ? (
                     <Row>
-                      {favoriteMovies.map((favMovie) => (
-                        <Col key={favMovie.id} md={4}>
-                          <MovieCard movie={favMovie} isFavorite={true} onToggleFavorite={handleToggleFavorite} />
+                      {favMovies.map((favMovie) => (
+                        <Col key={favMovie._id} md={4} className="mb-4">
+                          <MovieCard
+                            movie={{ ...favMovie, id: favMovie._id }}
+                            isFavorite={true}
+                            onToggleFavorite={handleToggleFavorite}
+                          />
                         </Col>
                       ))}
                     </Row>
