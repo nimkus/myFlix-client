@@ -134,12 +134,11 @@ export const MainView = () => {
    * Route rendering
    */
 
-  // Fetch movies, directors, genres, and user info when component mounts or auth changes
   useEffect(() => {
     if (auth.user && auth.token) {
-      // fetch movies
+      // MOVIES, FETCH ALL
       fetchAndSetState(
-        `https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies?page=${page}`,
+        `https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies?page=${page}&limit=9`,
         (data) => {
           const moviesFromApi = data.map((movie) => ({
             id: movie._id,
@@ -166,7 +165,7 @@ export const MainView = () => {
         }
       );
 
-      //fetch directors
+      // DIRECTORS, FETCH ALL
       fetchAndSetState('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/directors/all', (data) => {
         const directorsFromApi = data.map((director) => ({
           id: director._id,
@@ -179,7 +178,7 @@ export const MainView = () => {
         setDirectors(directorsFromApi);
       });
 
-      // Fetch genres
+      // GENRES, FETCH ALL
       fetchAndSetState('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/genres/all', (data) => {
         const genresFromApi = data.map((genre) => ({
           id: genre._id,
@@ -190,7 +189,7 @@ export const MainView = () => {
         setGenres(genresFromApi);
       });
 
-      // Fetch info of current user
+      // USER, FETCH CURRENT USER INFO
       fetchAndSetState(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${auth.user.username}`, (data) => {
         const userInfoFromApi = {
           id: data._id,
@@ -209,14 +208,16 @@ export const MainView = () => {
     }
   }, [auth.user, auth.token, page]);
 
-  // Signup
+  /**
+   * Route rendering
+   */
+
   const renderSignup = () => (
     <Col md={5}>
       <SignupView />
     </Col>
   );
 
-  // Login
   const renderLogin = () => (
     <Col md={5}>
       <LoginView
@@ -229,7 +230,6 @@ export const MainView = () => {
     </Col>
   );
 
-  // Render ALL movies, directors, genres
   const renderMovies = () => (
     <>
       <NavBar user={auth.user} onLogout={handleLogout} />
@@ -299,7 +299,6 @@ export const MainView = () => {
     </>
   );
 
-  // Render SINGLE movie, director, genre, user
   const renderSingleMovie = () => (
     <Col md={8}>
       <MovieView movies={movies} toggleFavoriteMovie={toggleFavoriteMovie} userFavorites={userInfo.favMovies} />
@@ -344,7 +343,7 @@ export const MainView = () => {
     return auth.user ? children : <Navigate to="/login" replace />;
   });
 
-  // Component to handle unmatched routes
+  // Unmatched routes
   const NotFound = () => (
     <Col>
       <h2>Page Not Found</h2>
