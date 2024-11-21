@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Row, Col, Button, Form, Dropdown } from 'react-bootstrap';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+
 import { LoginView } from '../login-view/login-view';
 import { SignupView } from '../signup-view/signup-view';
 import { MovieView } from '../movie-view/movie-view.jsx';
@@ -8,9 +11,7 @@ import { DirectorsView } from '../directors-view/directors-view.jsx';
 import { GenreCard } from '../genre-card/genre-card.jsx';
 import { GenreView } from '../genre-view/genre-view.jsx';
 import { ProfileView } from '../profile-view/profile-view.jsx';
-import { NavBar } from '../nav-bar/nav-bar';
-import { Row, Col, Button } from 'react-bootstrap';
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { NavBar } from '../nav-bar/nav-bar.jsx';
 
 export const MainView = () => {
   // User Authentication
@@ -21,7 +22,7 @@ export const MainView = () => {
 
   const { user, token } = auth;
 
-  // State to store data fetched from the API
+  // State: Data from API
   const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -30,11 +31,40 @@ export const MainView = () => {
   const [userInfo, setUserInfo] = useState([]);
   const [favoriteMovies, setFavoriteMovies] = useState([]);
 
+  // State: Search and filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('');
+  const [selectedDirector, setSelectedDirector] = useState('');
+
   const handleLogout = () => {
     // Clear user-specific data.
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setAuth({ user: null, token: null });
+  };
+
+  // Debounce effect to update debouncedSearchTerm after delay
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => {
+      clearTimeout(handler); // Cleanup on unmount or searchTerm change
+    };
+  }, [searchTerm]);
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value); // Update immediately but debounce for actual search
+  };
+
+  const handleGenreChange = (genre) => {
+    setSelectedGenre(genre);
+  };
+
+  const handleDirectorChange = (director) => {
+    setSelectedDirector(director);
   };
 
   /**
@@ -75,10 +105,33 @@ export const MainView = () => {
    */
   const fetchAndSetState = async (url, setData, handlePagination = null) => {
     try {
+      const isMoviesEndpoint = /^https?:\/\/[^/]+\/movies(\?.*)?$/.test(url);
+
+      if (isMoviesEndpoint) {
+        // Append search term, genre, and director filters only for the movies endpoint
+        if (debouncedSearchTerm) {
+          url += `&title=${encodeURIComponent(debouncedSearchTerm)}`;
+        }
+        if (selectedGenre) {
+          url += `&genre=${encodeURIComponent(selectedGenre)}`;
+        }
+        if (selectedDirector) {
+          url += `&director=${encodeURIComponent(selectedDirector)}`;
+        }
+      }
+
       const result = await fetchData(url);
 
       if (result) {
-        // Check if the response contains pagination info (totalPages, currentPage)
+        // Check if response contains the "No results found" message
+        if (result.message === 'No results found for the specified filters.') {
+          setData([]); // Set an empty list to clear existing data
+          setTotalPages(1); // Reset pagination
+          setPage(1); // Reset current page
+          return; // Exit early since there are no results
+        }
+
+        // Check if response contains pagination info (totalPages, currentPage)
         if (result.totalPages && result.currentPage) {
           const { data: list, totalPages, currentPage } = result;
           setData(list); // Set the array data (movies, genres, etc.)
@@ -115,19 +168,19 @@ export const MainView = () => {
 
   // Function to handle rendering a list or a fallback message
   const ListOrMessage = ({ list, renderItem, emptyMessage = 'List is loading or empty' }) => {
-    return list.length > 0 ? (
-      list.map((item) => {
-        // Use `item.id` or `item._id` if available, otherwise log a warning about missing unique identifiers
-        if (!item.id && !item._id) {
-          console.warn("Item missing a unique 'id' or '_id'. Consider fixing this in the data source.");
-        }
+    if (list.length === 0) {
+      return <Col className="text-center my-5">{emptyMessage}</Col>;
+    }
 
-        // Only fallback to `index` if `id` or `_id` is not available, but log a warning to make the issue known
-        return <React.Fragment key={item.id || item._id}>{renderItem(item)}</React.Fragment>;
-      })
-    ) : (
-      <Col>{emptyMessage}</Col>
-    );
+    return list.map((item) => {
+      // Use `item.id` or `item._id` if available, otherwise log a warning about missing unique identifiers
+      if (!item.id && !item._id) {
+        console.warn("Item missing a unique 'id' or '_id'. Consider fixing this in the data source.");
+      }
+
+      // Only fallback to `index` if `id` or `_id` is not available, but log a warning to make the issue known
+      return <React.Fragment key={item.id || item._id}>{renderItem(item)}</React.Fragment>;
+    });
   };
 
   /**
@@ -164,7 +217,11 @@ export const MainView = () => {
           setPage(currentPage); // Set the current page
         }
       );
+    }
+  }, [auth.user, auth.token, debouncedSearchTerm, selectedGenre, selectedDirector, page]);
 
+  useEffect(() => {
+    if (auth.user && auth.token) {
       // DIRECTORS, FETCH ALL
       fetchAndSetState('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/directors/all', (data) => {
         const directorsFromApi = data.map((director) => ({
@@ -206,7 +263,7 @@ export const MainView = () => {
     } else {
       console.warn('Error fetching data.');
     }
-  }, [auth.user, auth.token, page]);
+  }, [auth.user, auth.token]);
 
   /**
    * Route rendering
@@ -230,9 +287,61 @@ export const MainView = () => {
     </Col>
   );
 
+  // Render search and filter options
+  const renderFilters = () => (
+    <Row className="mb-4">
+      <Col md={6}>
+        <Form.Control
+          type="text"
+          placeholder="Search movies by title"
+          value={searchTerm}
+          onChange={handleSearch}
+          className="mb-3"
+        />
+      </Col>
+      <Col md={3}>
+        <Dropdown onSelect={(selectedId) => setSelectedGenre(selectedId || '')}>
+          <Dropdown.Toggle variant="outline-primary" className="w-100">
+            {selectedGenre ? genres.find((g) => g.id === selectedGenre)?.name || 'Filter by Genre' : 'Filter by Genre'}
+          </Dropdown.Toggle>
+          <Dropdown.Menu>
+            <Dropdown.Item eventKey="">
+              <i>All Genres</i>
+            </Dropdown.Item>
+            {genres.map((genre) => (
+              <Dropdown.Item key={genre.id} eventKey={genre.id}>
+                {genre.name}
+              </Dropdown.Item>
+            ))}
+          </Dropdown.Menu>
+        </Dropdown>
+      </Col>
+      <Col md={3}>
+        <Dropdown onSelect={(selectedId) => setSelectedDirector(selectedId || '')}>
+          <Dropdown.Toggle variant="outline-primary" className="w-100">
+            {selectedDirector
+              ? directors.find((d) => d.id === selectedDirector)?.name || 'Filter by Director'
+              : 'Filter by Director'}
+          </Dropdown.Toggle>
+          <Dropdown.Menu>
+            <Dropdown.Item eventKey="">
+              <i>All Directors</i>
+            </Dropdown.Item>
+            {directors.map((director) => (
+              <Dropdown.Item key={director.id} eventKey={director.id}>
+                {director.name}
+              </Dropdown.Item>
+            ))}
+          </Dropdown.Menu>
+        </Dropdown>
+      </Col>
+    </Row>
+  );
+
   const renderMovies = () => (
     <>
       <NavBar user={auth.user} onLogout={handleLogout} />
+      {renderFilters()}
       <ListOrMessage
         list={movies}
         renderItem={(movie) => {
@@ -243,6 +352,7 @@ export const MainView = () => {
             </Col>
           );
         }}
+        emptyMessage="No results found for the specified filters. Try adjusting your search or filters."
       />
       <Row className="d-flex justify-content-center mb-4">
         {/* Conditionally render the "Previous page" button */}
