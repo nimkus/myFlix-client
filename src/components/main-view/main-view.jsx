@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Row, Col, Button, Form, Dropdown } from 'react-bootstrap';
+import { Row, Col, Button, Form, Dropdown, Card } from 'react-bootstrap';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 
 import { LoginView } from '../login-view/login-view';
@@ -289,53 +289,80 @@ export const MainView = () => {
 
   // Render search and filter options
   const renderFilters = () => (
-    <Row className="mb-4">
-      <Col md={6}>
-        <Form.Control
-          type="text"
-          placeholder="Search movies by title"
-          value={searchTerm}
-          onChange={handleSearch}
-          className="mb-3"
-        />
-      </Col>
-      <Col md={3}>
-        <Dropdown onSelect={(selectedId) => setSelectedGenre(selectedId || '')}>
-          <Dropdown.Toggle variant="outline-primary" className="w-100">
-            {selectedGenre ? genres.find((g) => g.id === selectedGenre)?.name || 'Filter by Genre' : 'Filter by Genre'}
-          </Dropdown.Toggle>
-          <Dropdown.Menu>
-            <Dropdown.Item eventKey="">
-              <i>All Genres</i>
-            </Dropdown.Item>
-            {genres.map((genre) => (
-              <Dropdown.Item key={genre.id} eventKey={genre.id}>
-                {genre.name}
+    <>
+      <Row className="mb-4" style={{ height: 350 }}>
+        <Card style={{ position: 'relative' }}>
+          <Card.Img
+            src="https://i.postimg.cc/NFZyyZTZ/bunbuster-wallpaper3.webp"
+            alt="Bunbuster Wallpaper"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: 0.25,
+            }}
+          />
+          <Card.ImgOverlay></Card.ImgOverlay>
+          <Card.ImgOverlay className="d-flex justify-content-center align-items-center text-primary">
+            <Card.Text style={{ fontSize: '1.2em', fontWeight: 'bold', textTransform: 'uppercase' }}>
+              Hop into the Bunnyverse: discover your favorite blockbusters in a world ruled by bunnies!
+            </Card.Text>
+          </Card.ImgOverlay>
+        </Card>
+      </Row>
+      <Row className="mb-4">
+        <Col md={6}>
+          <Form.Control
+            type="text"
+            placeholder="Search movies by title"
+            value={searchTerm}
+            onChange={handleSearch}
+            className="mb-3"
+          />
+        </Col>
+        <Col md={3}>
+          <Dropdown onSelect={(selectedId) => setSelectedGenre(selectedId || '')}>
+            <Dropdown.Toggle variant="outline-primary" className="w-100">
+              {selectedGenre
+                ? genres.find((g) => g.id === selectedGenre)?.name || 'Filter by Genre'
+                : 'Filter by Genre'}
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item eventKey="">
+                <i>All Genres</i>
               </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Dropdown>
-      </Col>
-      <Col md={3}>
-        <Dropdown onSelect={(selectedId) => setSelectedDirector(selectedId || '')}>
-          <Dropdown.Toggle variant="outline-primary" className="w-100">
-            {selectedDirector
-              ? directors.find((d) => d.id === selectedDirector)?.name || 'Filter by Director'
-              : 'Filter by Director'}
-          </Dropdown.Toggle>
-          <Dropdown.Menu>
-            <Dropdown.Item eventKey="">
-              <i>All Directors</i>
-            </Dropdown.Item>
-            {directors.map((director) => (
-              <Dropdown.Item key={director.id} eventKey={director.id}>
-                {director.name}
+              {genres.map((genre) => (
+                <Dropdown.Item key={genre.id} eventKey={genre.id}>
+                  {genre.name}
+                </Dropdown.Item>
+              ))}
+            </Dropdown.Menu>
+          </Dropdown>
+        </Col>
+        <Col md={3}>
+          <Dropdown onSelect={(selectedId) => setSelectedDirector(selectedId || '')}>
+            <Dropdown.Toggle variant="outline-primary" className="w-100">
+              {selectedDirector
+                ? directors.find((d) => d.id === selectedDirector)?.name || 'Filter by Director'
+                : 'Filter by Director'}
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item eventKey="">
+                <i>All Directors</i>
               </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Dropdown>
-      </Col>
-    </Row>
+              {directors.map((director) => (
+                <Dropdown.Item key={director.id} eventKey={director.id}>
+                  {director.name}
+                </Dropdown.Item>
+              ))}
+            </Dropdown.Menu>
+          </Dropdown>
+        </Col>
+      </Row>
+    </>
   );
 
   const renderMovies = () => (

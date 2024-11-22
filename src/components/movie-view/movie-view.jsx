@@ -22,7 +22,7 @@ export const MovieView = ({ movies, toggleFavoriteMovie, userFavorites }) => {
       <Card.Body>
         <h2 className="text-center mb-3">{movie.title}</h2>
 
-        <Card.Img variant="top" src={movie.image} alt={movie.title} />
+        <Card.Img variant="top" src={movie.imagePath} alt={movie.title} />
 
         <hr className="my-4" />
 
@@ -54,7 +54,7 @@ export const MovieView = ({ movies, toggleFavoriteMovie, userFavorites }) => {
             <p className="text-muted mb-1" style={{ fontSize: '0.9rem' }}>
               Director
             </p>
-            <p className="text-dark">{movie.directorName}</p>
+            <Link to={`/movies/directors/${encodeURIComponent(movie.directorName)}`}>{movie.directorName}</Link>
           </Col>
           <Col md={6}>
             <p className="text-muted mb-1" style={{ fontSize: '0.9rem' }}>

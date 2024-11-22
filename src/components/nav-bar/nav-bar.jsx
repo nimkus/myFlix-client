@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { Container, Nav, Navbar, Dropdown } from 'react-bootstrap';
 
 export const NavBar = ({ user, onLogout }) => {
@@ -23,14 +23,32 @@ export const NavBar = ({ user, onLogout }) => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/" className="fw-bold">
-              Movies
+            <Nav.Link as="span" className="fw-bold">
+              <NavLink
+                to="/"
+                className={({ isActive }) => (isActive ? 'text-primary fw-bold' : 'text-dark fw-bold')}
+                style={{ textDecoration: 'none' }}
+              >
+                Movies
+              </NavLink>
             </Nav.Link>
-            <Nav.Link as={Link} to="/movies/directors" className="fw-bold">
-              Directors
+            <Nav.Link as="span" className="fw-bold">
+              <NavLink
+                to="/movies/directors"
+                className={({ isActive }) => (isActive ? 'text-primary fw-bold' : 'text-dark fw-bold')}
+                style={{ textDecoration: 'none' }}
+              >
+                Directors
+              </NavLink>
             </Nav.Link>
-            <Nav.Link as={Link} to="/movies/genres" className="fw-bold">
-              Genres
+            <Nav.Link as="span" className="fw-bold">
+              <NavLink
+                to="/movies/genres"
+                className={({ isActive }) => (isActive ? 'text-primary fw-bold' : 'text-dark fw-bold')}
+                style={{ textDecoration: 'none' }}
+              >
+                Genres
+              </NavLink>
             </Nav.Link>
           </Nav>
           <Nav className="ms-auto align-items-center">
@@ -47,9 +65,9 @@ export const NavBar = ({ user, onLogout }) => {
                   <Dropdown.Item as={Link} to={`/users/${user.username}`}>
                     Profile
                   </Dropdown.Item>
-                  <Dropdown.Divider /> {/* Bootstrap-style divider */}
+                  <Dropdown.Divider />
                   <Dropdown.Item onClick={handleLogout} className="text-primary">
-                    <strong>Logout</strong> {/* Stronger font for emphasis */}
+                    <strong>Logout</strong>
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
