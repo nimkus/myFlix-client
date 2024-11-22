@@ -1,7 +1,9 @@
-$primary: rgb(25, 55, 176);
-$body-bg: rgb(243, 244, 253);
+@use 'bootstrap/scss/variables' with (
+  $primary: rgb(25, 55, 176),
+  $body-bg: rgb(243, 244, 253)
+);
 
-@import '~bootstrap/scss/bootstrap.scss';
+@use 'bootstrap/scss/bootstrap' as bs;
 
 .navbar-transparent {
   background-color: transparent !important;
