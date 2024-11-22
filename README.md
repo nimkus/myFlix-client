@@ -1,6 +1,6 @@
 # Bunbuster App
 
-**Hop into the Bunnyverse and find your favorite blockbusters in a world inhabited entirely by bunnies.**
+**Hop into the Bunnyverse: discover your favorite blockbusters in a world ruled by bunnies!**
 
 Welcome to **Bunbuster**, where the only stars in the show are fluffy, whisker-twitching, carrot-chomping bunnies! Dive into a parallel universe where every blockbuster is bunny-themed: heroes with floppy ears, villains with twitchy noses, and epic adventures that will leave you hopping with joy.
 
