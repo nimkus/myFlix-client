@@ -19,17 +19,61 @@ import { MovieCard } from '../movie-card/movie-card.jsx';
 export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
   const navigate = useNavigate();
 
-  // State management for user information, passwords, and form errors
+  /**
+   * @state {Object|null} userInfo - Stores user profile data.
+   */
   const [userInfo, setUserInfo] = useState(userData || null);
+
+  /**
+   * @state {Object} tempData - Holds temporary profile edits before saving.
+   */
   const [tempData, setTempData] = useState(userData || null);
+
+  /**
+   * @state {Object} passwordData - Contains the current and new password values.
+   * @property {string} currentPassword - The user's current password.
+   * @property {string} newPassword - The new password to update.
+   */
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
+
+  /**
+   * @state {Array} favMovies - List of the user's favorite movies.
+   */
   const [favMovies, setFavMovies] = useState([]);
+
+  /**
+   * @state {Object} formErrors - Stores validation error messages for form fields.
+   */
   const [formErrors, setFormErrors] = useState({});
+
+  /**
+   * @state {boolean} isEditing - Tracks whether the user is in profile editing mode.
+   */
   const [isEditing, setIsEditing] = useState(false);
+
+  /**
+   * @state {boolean} showPasswordFields - Controls visibility of the password change fields.
+   */
   const [showPasswordFields, setShowPasswordFields] = useState(false);
+
+  /**
+   * @state {boolean} showPasswords - Determines whether passwords are visible in the input fields.
+   */
   const [showPasswords, setShowPasswords] = useState(false);
+
+  /**
+   * @state {string} successMessage - Stores a success or error message after form submission.
+   */
   const [successMessage, setSuccessMessage] = useState('');
+
+  /**
+   * @state {boolean} showDeleteModal - Controls the visibility of the delete profile confirmation modal.
+   */
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  /**
+   * @state {string} deleteError - Stores error messages related to profile deletion.
+   */
   const [deleteError, setDeleteError] = useState('');
 
   // Retrieve user details from localStorage
@@ -108,13 +152,14 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
   }, [token]);
 
   /**
-   * Toggles the favorite movie status for a given movie.
-   *
-   * @param {string} movieId - The ID of the movie to toggle.
+   * Toggles the favorite status of a given movie.
+   * @callback toggleFavoriteMovie
+   * @param {string} movieId - The unique identifier of the movie.
    */
   const handleToggleFavorite = (movieId) => {
     toggleFavoriteMovie(movieId);
   };
+
   /**
    * Handles input field changes, updates state, and validates the field.
    *
@@ -199,7 +244,12 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
     setTimeout(() => setSuccessMessage(''), 7000); // Automatically clear success message after 7 seconds
   };
 
-  // Validates individual fields and sets appropriate error messages
+  /**
+   * Validates individual input fields and sets appropriate error messages.
+   *
+   * @param {string} field - The name of the field being validated.
+   * @param {string} value - The value entered in the field.
+   */
   const validateField = (field, value) => {
     let errorMessage = '';
 
@@ -235,7 +285,9 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
     setFormErrors((prevErrors) => ({ ...prevErrors, [field]: errorMessage }));
   };
 
-  // Resets the form to its original state
+  /**
+   * Resets form to original state
+   */
   const resetForm = () => {
     setTempData(userInfo); // Reset tempData to the current user data
     setPasswordData({
@@ -292,7 +344,14 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
     }
   };
 
-  // Renders individual profile fields (username, email, birthday) with validation feedback
+  /**
+   * Renders an individual profile field with validation feedback.
+   *
+   * @param {string} label - The display label for the field.
+   * @param {string} field - The name of the field (e.g., "username", "email", "birthday").
+   * @param {string} value - The current value of the field.
+   * @returns {JSX.Element} A form field row for user profile editing or viewing.
+   */
   const renderProfileField = (label, field, value) => (
     <Row className="mb-4" key={field}>
       <Col>
