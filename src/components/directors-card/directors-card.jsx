@@ -2,6 +2,18 @@ import PropTypes from 'prop-types';
 import Card from 'react-bootstrap/Card';
 import { Link } from 'react-router-dom';
 
+/**
+ * Component for displaying a director's card with their name and birth/death dates.
+ *
+ * @component
+ * @param {Object} props - The properties object.
+ * @param {Object} props.director - The director object.
+ * @param {string} props.director.name - The name of the director.
+ * @param {string} props.director.bio - The biography of the director.
+ * @param {string} props.director.birthDate - The birth date of the director.
+ * @param {string} [props.director.deathDate] - The death date of the director (if applicable).
+ * @returns {JSX.Element} A card component displaying director details.
+ */
 export const DirectorsCard = ({ director }) => {
   return (
     <Link
@@ -28,7 +40,10 @@ export const DirectorsCard = ({ director }) => {
   );
 };
 
-// define prop constraints
+/**
+ * Defines the prop types for the DirectorsCard component.
+ * @type {Object}
+ */
 DirectorsCard.propTypes = {
   director: PropTypes.shape({
     name: PropTypes.string,

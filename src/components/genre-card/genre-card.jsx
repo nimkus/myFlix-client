@@ -2,6 +2,16 @@ import PropTypes from 'prop-types';
 import Card from 'react-bootstrap/Card';
 import { Link } from 'react-router-dom';
 
+/**
+ * Component for displaying a genre card.
+ *
+ * @component
+ * @param {Object} props - The properties object.
+ * @param {Object} props.genres - The genre object.
+ * @param {string} props.genres.name - The name of the genre.
+ * @param {string} [props.genres.description] - The description of the genre.
+ * @returns {JSX.Element} A card component displaying genre details.
+ */
 export const GenreCard = ({ genres }) => {
   return (
     <Link
@@ -18,7 +28,10 @@ export const GenreCard = ({ genres }) => {
   );
 };
 
-// define prop constraints
+/**
+ * Defines the prop types for the GenreCard component.
+ * @type {Object}
+ */
 GenreCard.propTypes = {
   genres: PropTypes.shape({
     name: PropTypes.string,

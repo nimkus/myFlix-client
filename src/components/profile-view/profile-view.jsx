@@ -5,37 +5,25 @@ import { Link } from 'react-router-dom';
 import { MdEditNote } from 'react-icons/md';
 import { MovieCard } from '../movie-card/movie-card.jsx';
 
-// UserEditView component handles profile editing, including password change, deletion, and displaying favorite movies
+/**
+ * ProfileView component allows users to view and edit their profile information.
+ * Users can update their details, change their password, delete their profile,
+ * and view their list of favorite movies.
+ *
+ * @component
+ * @param {Object} props - The properties object.
+ * @param {Object} props.userData - The user data object received from the API.
+ * @param {Function} props.toggleFavoriteMovie - Function to toggle favorite movie status.
+ * @returns {JSX.Element} A user profile view with editable fields.
+ */
 export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
-  // Function to format date for input fields in 'YYYY-MM-DD' format
-  const formatDateForInput = (date) => {
-    if (!date) return '';
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return '';
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
-
-  // Function to format date for display in 'DD-MM-YYYY' format
-  const formatDateForDisplay = (date) => {
-    if (!date) return 'Not set';
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return 'Invalid date';
-    return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
-  };
-
-  // Get name of logged in user and token from local storage
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user'));
+  const navigate = useNavigate();
 
   // State management for user information, passwords, and form errors
   const [userInfo, setUserInfo] = useState(userData || null);
   const [tempData, setTempData] = useState(userData || null);
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
-
-  // State management for favortite movies
   const [favMovies, setFavMovies] = useState([]);
-
-  // State to store form data
   const [formErrors, setFormErrors] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
@@ -44,7 +32,35 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
-  const navigate = useNavigate();
+  // Retrieve user details from localStorage
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  /**
+   * Formats a given date to be used in an input field ('YYYY-MM-DD' format).
+   *
+   * @param {string} date - The date string to format.
+   * @returns {string} The formatted date or an empty string if invalid.
+   */
+  const formatDateForInput = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  /**
+   * Formats a given date for display ('DD-MM-YYYY' format).
+   *
+   * @param {string} date - The date string to format.
+   * @returns {string} The formatted date or 'Not set' if invalid.
+   */
+  const formatDateForDisplay = (date) => {
+    if (!date) return 'Not set';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return 'Invalid date';
+    return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+  };
 
   // Update userInfo and tempData when userData is received
   useEffect(() => {
@@ -57,7 +73,9 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
     }
   }, [userData]);
 
-  // Getting users favorite movies list from API
+  /**
+   * Fetches the user's list of favorite movies from the API.
+   */
   useEffect(() => {
     const fetchUserInfo = async (page = 1, limit = 6) => {
       if (user && user.username) {
@@ -89,12 +107,20 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
     fetchUserInfo();
   }, [token]);
 
-  // Handles toggling of favorite movie status
+  /**
+   * Toggles the favorite movie status for a given movie.
+   *
+   * @param {string} movieId - The ID of the movie to toggle.
+   */
   const handleToggleFavorite = (movieId) => {
     toggleFavoriteMovie(movieId);
   };
-
-  // Handle changes in form inputs and validate them
+  /**
+   * Handles input field changes, updates state, and validates the field.
+   *
+   * @param {string} field - The field being updated.
+   * @param {string} value - The new value of the field.
+   */
   const handleChange = (field, value) => {
     if (field === 'currentPassword' || field === 'newPassword') {
       setPasswordData({ ...passwordData, [field]: value });
@@ -108,43 +134,11 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
     }
   };
 
-  // Validates individual fields and sets appropriate error messages
-  const validateField = (field, value) => {
-    let errorMessage = '';
-
-    switch (field) {
-      case 'username':
-        if (value.length < 5) errorMessage = 'Username must be at least 5 characters long.';
-        break;
-      case 'email':
-        const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
-        if (!emailPattern.test(value)) errorMessage = 'Please enter a valid email address.';
-        break;
-      case 'birthday':
-        const birthDate = new Date(value);
-        const today = new Date();
-        const ageLimit = 200;
-        if (birthDate > today) {
-          errorMessage = 'The birthday cannot be in the future.';
-        } else if (birthDate < new Date(today.setFullYear(today.getFullYear() - ageLimit))) {
-          errorMessage = `This is not a valid age in the bunnyverse.`;
-        }
-        break;
-      case 'newPassword':
-        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-        if (!passwordPattern.test(value)) {
-          errorMessage =
-            'Password must contain at least 8 characters, an uppercase letter, a lowercase letter, a number, and a symbol.';
-        }
-        break;
-      default:
-        break;
-    }
-
-    setFormErrors((prevErrors) => ({ ...prevErrors, [field]: errorMessage }));
-  };
-
-  // Handle saving profile changes with validation and API call
+  /**
+   * Handles saving profile changes with validation and API call.
+   *
+   * @param {Event} event - The form submission event.
+   */
   const handleSave = async (event) => {
     event.preventDefault();
 
@@ -205,6 +199,42 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
     setTimeout(() => setSuccessMessage(''), 7000); // Automatically clear success message after 7 seconds
   };
 
+  // Validates individual fields and sets appropriate error messages
+  const validateField = (field, value) => {
+    let errorMessage = '';
+
+    switch (field) {
+      case 'username':
+        if (value.length < 5) errorMessage = 'Username must be at least 5 characters long.';
+        break;
+      case 'email':
+        const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+        if (!emailPattern.test(value)) errorMessage = 'Please enter a valid email address.';
+        break;
+      case 'birthday':
+        const birthDate = new Date(value);
+        const today = new Date();
+        const ageLimit = 200;
+        if (birthDate > today) {
+          errorMessage = 'The birthday cannot be in the future.';
+        } else if (birthDate < new Date(today.setFullYear(today.getFullYear() - ageLimit))) {
+          errorMessage = `This is not a valid age in the bunnyverse.`;
+        }
+        break;
+      case 'newPassword':
+        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+        if (!passwordPattern.test(value)) {
+          errorMessage =
+            'Password must contain at least 8 characters, an uppercase letter, a lowercase letter, a number, and a symbol.';
+        }
+        break;
+      default:
+        break;
+    }
+
+    setFormErrors((prevErrors) => ({ ...prevErrors, [field]: errorMessage }));
+  };
+
   // Resets the form to its original state
   const resetForm = () => {
     setTempData(userInfo); // Reset tempData to the current user data
@@ -218,7 +248,9 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
     setSuccessMessage(''); // Clear any existing messages
   };
 
-  // Handles the deletion of the user profile with API call
+  /**
+   * Handles the deletion of the user profile with an API call.
+   */
   const handleDelete = async () => {
     if (!token) {
       alert('You need to be logged in to perform this action.');
@@ -300,10 +332,10 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
                     field === 'username'
                       ? 'username'
                       : field === 'email'
-                        ? 'email'
-                        : field === 'birthday'
-                          ? 'bday'
-                          : undefined
+                      ? 'email'
+                      : field === 'birthday'
+                      ? 'bday'
+                      : undefined
                   }
                   value={field === 'birthday' ? formatDateForInput(tempData[field]) : tempData[field] || ''}
                   onChange={(e) => handleChange(field, e.target.value)}
@@ -324,8 +356,8 @@ export const ProfileView = ({ userData, toggleFavoriteMovie }) => {
                     ? 'None'
                     : value
                   : field === 'birthday'
-                    ? formatDateForDisplay(value)
-                    : value || 'Not set'
+                  ? formatDateForDisplay(value)
+                  : value || 'Not set'
               }
               aria-label={label}
               style={{ lineHeight: '1.6', color: '#444' }}

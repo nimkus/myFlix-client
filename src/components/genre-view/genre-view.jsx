@@ -2,6 +2,14 @@ import { useParams } from 'react-router';
 import { Card, Button, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
+/**
+ * Component for displaying detailed information about a genre.
+ *
+ * @component
+ * @param {Object} props - The properties object.
+ * @param {Array} props.genres - The array of genre objects.
+ * @returns {JSX.Element} A view displaying genre details.
+ */
 export const GenreView = ({ genres }) => {
   const { genreName } = useParams();
   const genre = genres.find((g) => g.name === genreName);

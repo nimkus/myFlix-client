@@ -2,6 +2,14 @@ import { useParams } from 'react-router';
 import { Card, Button, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
+/**
+ * Component for displaying detailed information about a director.
+ *
+ * @component
+ * @param {Object} props - The properties object.
+ * @param {Array} props.directors - The array of director objects.
+ * @returns {JSX.Element} A view displaying director details.
+ */
 export const DirectorsView = ({ directors }) => {
   const { directorName } = useParams();
   const director = directors.find((d) => d.name === directorName);

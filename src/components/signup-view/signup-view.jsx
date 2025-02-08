@@ -3,9 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { Form, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
+/**
+ * SignupView component provides a registration form for new users.
+ *
+ * Users are required to enter their username, password, email, and birthday.
+ * The form includes validation rules to ensure correct input before submission.
+ * On successful registration, the user is redirected to the login page.
+ *
+ * @component
+ * @returns {JSX.Element} A user registration form.
+ */
 export const SignupView = () => {
   const navigate = useNavigate();
 
+  // State for storing user input values
   const [formValues, setFormValues] = useState({
     username: '',
     password: '',
@@ -13,6 +24,7 @@ export const SignupView = () => {
     birthday: '',
   });
 
+  // State for tracking validation errors
   const [formErrors, setFormErrors] = useState({
     username: '',
     password: '',
@@ -20,11 +32,23 @@ export const SignupView = () => {
     birthday: '',
   });
 
+  /**
+   * Handles input field changes, updates state, and validates the field.
+   *
+   * @param {string} field - The field being updated.
+   * @param {string} value - The new value of the field.
+   */
   const handleChange = (field, value) => {
     setFormValues({ ...formValues, [field]: value });
     validateField(field, value);
   };
 
+  /**
+   * Validates individual form fields and sets error messages accordingly.
+   *
+   * @param {string} field - The field to validate.
+   * @param {string} value - The value to validate.
+   */
   const validateField = (field, value) => {
     let errorMessage = '';
 
@@ -66,6 +90,16 @@ export const SignupView = () => {
     setFormErrors({ ...formErrors, [field]: errorMessage });
   };
 
+  /**
+   * Handles form submission, validates input, and sends a request to the API.
+   *
+   * - Prevents submission if validation errors exist.
+   * - Sends a POST request to the signup API endpoint.
+   * - If successful, alerts the user and redirects to the login page.
+   * - If an error occurs, displays an appropriate message.
+   *
+   * @param {Event} event - The form submission event.
+   */
   const handleSubmit = async (event) => {
     event.preventDefault();
 

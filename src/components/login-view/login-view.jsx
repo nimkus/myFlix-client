@@ -2,12 +2,30 @@ import React, { useState } from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
+/**
+ * LoginView component allows users to log in by entering their credentials.
+ *
+ * @component
+ * @param {Object} props - The properties object.
+ * @param {Function} props.onLoggedIn - Callback function executed upon successful login.
+ * @returns {JSX.Element} A form for user login.
+ */
 export const LoginView = ({ onLoggedIn }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  /**
+   * Handles form submission for login.
+   *
+   * - Prevents full-page reload.
+   * - Sends a POST request to the login API endpoint.
+   * - If successful, stores user details and authentication token in localStorage.
+   * - Calls `onLoggedIn` callback function with user and token data.
+   * - Alerts the user if login fails.
+   *
+   * @param {Event} event - The form submission event.
+   */
   const handleSubmit = (event) => {
-    // prevents reload the entire page
     event.preventDefault();
 
     const data = {
