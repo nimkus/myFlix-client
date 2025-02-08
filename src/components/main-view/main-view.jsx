@@ -13,8 +13,19 @@ import { GenreView } from '../genre-view/genre-view.jsx';
 import { ProfileView } from '../profile-view/profile-view.jsx';
 import { NavBar } from '../nav-bar/nav-bar.jsx';
 
+/**
+ * MainView component manages authentication, fetches data from the API,
+ * and renders different sections such as movies, directors, genres, and user profiles.
+ *
+ * @component
+ * @returns {JSX.Element} The main application view.
+ */
 export const MainView = () => {
-  // User Authentication
+  /**
+   * @state {Object} auth - Stores user authentication details.
+   * @property {Object|null} auth.user - The authenticated user object.
+   * @property {string|null} auth.token - The authentication token.
+   */
   const [auth, setAuth] = useState(() => ({
     user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('token') || null,
@@ -23,20 +34,68 @@ export const MainView = () => {
   const { user, token } = auth;
 
   // State: Data from API
+  /**
+   * @state {Array} movies - List of movies fetched from the API.
+   */
   const [movies, setMovies] = useState([]);
+
+  /**
+   * @state {number} page - Current pagination page for movies.
+   */
   const [page, setPage] = useState(1);
+
+  /**
+   * @state {number} totalPages - Total number of available pages for movies.
+   */
   const [totalPages, setTotalPages] = useState(1);
+
+  /**
+   * @state {Array} directors - List of directors fetched from the API.
+   */
   const [directors, setDirectors] = useState([]);
+
+  /**
+   * @state {Array} genres - List of genres fetched from the API.
+   */
   const [genres, setGenres] = useState([]);
+
+  /**
+   * @state {Object} userInfo - The authenticated user's profile information.
+   */
   const [userInfo, setUserInfo] = useState([]);
+
+  /**
+   * @state {Array} favoriteMovies - List of movie IDs that the user has marked as favorite.
+   */
   const [favoriteMovies, setFavoriteMovies] = useState([]);
 
   // State: Search and filters
+  /**
+   * @state {string} searchTerm - The current search input value.
+   */
   const [searchTerm, setSearchTerm] = useState('');
+
+  /**
+   * @state {string} debouncedSearchTerm - Debounced search term to reduce API calls.
+   */
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  /**
+   * @state {string} selectedGenre - The currently selected genre filter.
+   */
   const [selectedGenre, setSelectedGenre] = useState('');
+
+  /**
+   * @state {string} selectedDirector - The currently selected director filter.
+   */
   const [selectedDirector, setSelectedDirector] = useState('');
 
+  /**
+   * Logs the user out, clears local storage, and resets authentication state.
+   *
+   * @function
+   * @returns {void}
+   */
   const handleLogout = () => {
     // Clear user-specific data.
     localStorage.removeItem('user');
@@ -44,7 +103,9 @@ export const MainView = () => {
     setAuth({ user: null, token: null });
   };
 
-  // Debounce effect to update debouncedSearchTerm after delay
+  /**
+   * Handles the debounced search effect, updating `debouncedSearchTerm` after 300ms.
+   */
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -55,22 +116,40 @@ export const MainView = () => {
     };
   }, [searchTerm]);
 
+  /**
+   * Handles search input change.
+   *
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+   */
   const handleSearch = (e) => {
     setSearchTerm(e.target.value); // Update immediately but debounce for actual search
   };
 
+  /**
+   * Handles changing the selected genre.
+   *
+   * @param {string} genre - The selected genre ID.
+   */
   const handleGenreChange = (genre) => {
     setSelectedGenre(genre);
   };
 
+  /**
+   * Handles changing the selected director.
+   *
+   * @param {string} director - The selected director ID.
+   */
   const handleDirectorChange = (director) => {
     setSelectedDirector(director);
   };
 
   /**
-   * Generalized function to fetch data from an API endpoint with authentication
-   * @param {string} url - The API endpoint to fetch data from
-   * @returns {Promise<object|null>} - The JSON data from the response or null if an error occurred
+   * Fetches data from an API endpoint with authentication.
+   *
+   * @async
+   * @function
+   * @param {string} url - The API endpoint to fetch data from.
+   * @returns {Promise<Object|null>} - The JSON data from the response or null if an error occurred.
    */
   const fetchData = async (url) => {
     if (!auth.token) {
@@ -96,12 +175,13 @@ export const MainView = () => {
   };
 
   /**
-   * Fetches data from an API endpoint and updates component state.
-   * Optionally handles pagination if applicable.
+   * Fetches data from an API and updates state. Handles filtering and pagination.
    *
+   * @async
+   * @function
    * @param {string} url - The API endpoint.
-   * @param {function} setData - State setter function to update the component's data (array or object).
-   * @param {function} [handlePagination=null] - Optional pagination handler function to update pagination state (totalPages, currentPage).
+   * @param {Function} setData - State setter function to update the component's data.
+   * @param {Function} [handlePagination=null] - Optional pagination handler function.
    */
   const fetchAndSetState = async (url, setData, handlePagination = null) => {
     try {
@@ -152,7 +232,11 @@ export const MainView = () => {
     }
   };
 
-  // Function to toggle favorite Movie
+  /**
+   * Toggles the favorite status of a movie for the user.
+   *
+   * @param {string} movieId - The ID of the movie to toggle.
+   */
   const toggleFavoriteMovie = (movieId) => {
     setUserInfo((prevUserInfo) => {
       const updatedFavMovies = prevUserInfo.favMovies.includes(movieId)
@@ -268,7 +352,6 @@ export const MainView = () => {
   /**
    * Route rendering
    */
-
   const renderSignup = () => (
     <Col md={5}>
       <SignupView />
@@ -475,7 +558,14 @@ export const MainView = () => {
     );
   };
 
-  // ProtectedRoute component to handle authentication
+  /**
+   * Higher-order component for protecting routes.
+   * Redirects users to login if they are not authenticated.
+   *
+   * @param {Object} props - The component props.
+   * @param {JSX.Element} props.children - The component's child elements.
+   * @returns {JSX.Element} The protected route.
+   */
   const ProtectedRoute = React.memo(({ children }) => {
     return auth.user ? children : <Navigate to="/login" replace />;
   });
