@@ -143,7 +143,7 @@ export const MovieCard = ({ movie, isFavorite, onToggleFavorite }) => {
 /**
  * Defines the prop types for the MovieCard component.
  * @type {Object}
- */ s;
+ */
 MovieCard.propTypes = {
   movie: PropTypes.shape({
     title: PropTypes.string,
