@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/movie-view/movie-view.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/movie-view/movie-view.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React from 'react';
+import { useParams } from 'react-router';
+import { Card, Button, Row, Col, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import { BsHeart, BsHeartFill } from 'react-icons/bs';
+
+/**
+ * MovieView component displays detailed information about a selected movie.
+ *
+ * @component
+ * @param {Object} props - The component properties.
+ * @param {Array&lt;Object>} props.movies - An array of movie objects available in the system.
+ * @param {Function} props.toggleFavoriteMovie - Function to toggle the movie's favorite status.
+ * @param {Array&lt;string>} props.userFavorites - A list of favorite movie IDs belonging to the user.
+ * @returns {JSX.Element} A detailed view of a movie with an option to mark it as a favorite.
+ */
+export const MovieView = ({ movies, toggleFavoriteMovie, userFavorites }) => {
+  // Get the movie ID from URL parameters
+  const { movieId } = useParams();
+
+  // Find the corresponding movie from the movies list
+  const movie = movies.find((m) => m.id === movieId);
+
+  // Display a loading message if movie data is not found
+  if (!movie) return &lt;p>Loading movie information...&lt;/p>;
+
+  /**
+   * @constant {boolean} isFavorite - Determines if the movie is in the user's favorite list.
+   */
+  const isFavorite = userFavorites.includes(movie.id);
+
+  /**
+   * Handles toggling the favorite status of the movie.
+   * Calls `toggleFavoriteMovie` to update the favorite state.
+   *
+   * @function
+   * @returns {void}
+   */
+  const handleToggleFavorite = () => {
+    toggleFavoriteMovie(movie.id);
+  };
+
+  return (
+    &lt;Card className="p-4 my-3 border-0" style={{ maxWidth: '700px', margin: 'auto' }}>
+      &lt;Card.Body>
+        &lt;h2 className="text-center mb-3">{movie.title}&lt;/h2>
+
+        &lt;Card.Img variant="top" src={movie.imagePath} alt={movie.title} />
+
+        &lt;hr className="my-4" />
+
+        &lt;Row className="mb-3">
+          &lt;Col md={6}>
+            &lt;p className="text-muted mb-1" style={{ fontSize: '0.9rem' }}>
+              Year
+            &lt;/p>
+            &lt;p className="text-dark">{movie.year}&lt;/p>
+          &lt;/Col>
+          &lt;Col md={6}>
+            &lt;p className="text-muted mb-1" style={{ fontSize: '0.9rem' }}>
+              Genre(s)
+            &lt;/p>
+            &lt;div>
+              {movie.genreName &amp;&amp;
+                movie.genreName.split(',').map((genre, index, array) => (
+                  &lt;React.Fragment key={index}>
+                    &lt;Link to={`/movies/genres/${encodeURIComponent(genre.trim())}`}>{genre.trim()}&lt;/Link>
+                    {index &lt; array.length - 1 &amp;&amp; ', '}
+                  &lt;/React.Fragment>
+                ))}
+            &lt;/div>
+          &lt;/Col>
+        &lt;/Row>
+
+        &lt;Row className="mb-3">
+          &lt;Col md={6}>
+            &lt;p className="text-muted mb-1" style={{ fontSize: '0.9rem' }}>
+              Director
+            &lt;/p>
+            &lt;Link to={`/movies/directors/${encodeURIComponent(movie.directorName)}`}>{movie.directorName}&lt;/Link>
+          &lt;/Col>
+          &lt;Col md={6}>
+            &lt;p className="text-muted mb-1" style={{ fontSize: '0.9rem' }}>
+              Duration
+            &lt;/p>
+            &lt;p className="text-dark">{movie.duration} minutes&lt;/p>
+          &lt;/Col>
+        &lt;/Row>
+
+        &lt;Row className="mb-3">
+          &lt;Col md={6}>
+            &lt;p className="text-muted mb-1" style={{ fontSize: '0.9rem' }}>
+              IMDB Rating
+            &lt;/p>
+            &lt;p className="text-dark">{movie.imdb_rating}&lt;/p>
+          &lt;/Col>
+          &lt;Col md={6}>
+            &lt;p className="text-muted mb-1" style={{ fontSize: '0.9rem' }}>
+              Language
+            &lt;/p>
+            &lt;p className="text-dark">{movie.language}&lt;/p>
+          &lt;/Col>
+        &lt;/Row>
+
+        &lt;hr className="my-4" />
+
+        &lt;h5 className="text-muted mb-2" style={{ fontSize: '1rem', fontWeight: 'normal' }}>
+          Description
+        &lt;/h5>
+        &lt;Card.Text style={{ lineHeight: '1.6', color: '#444' }}>{movie.description}&lt;/Card.Text>
+
+        &lt;div className="mt-4 d-flex justify-content-center">
+          &lt;Row className="align-items-center">
+            &lt;Col xs="auto">
+              &lt;OverlayTrigger
+                placement="top"
+                overlay={&lt;Tooltip>{isFavorite ? 'Remove from favorites' : 'Add to favorites'}&lt;/Tooltip>}
+              >
+                &lt;Button
+                  variant="link"
+                  className="p-0"
+                  onClick={handleToggleFavorite}
+                  style={{ color: 'var(--bs-primary)', fontSize: '1.5rem' }}
+                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  {isFavorite ? &lt;BsHeartFill aria-hidden="true" /> : &lt;BsHeart aria-hidden="true" />}
+                &lt;/Button>
+              &lt;/OverlayTrigger>
+            &lt;/Col>
+            &lt;Col xs="auto">
+              &lt;Link to={`/`}>
+                &lt;Button variant="outline-primary" className="px-4" style={{ borderRadius: '20px' }}>
+                  Back
+                &lt;/Button>
+              &lt;/Link>
+            &lt;/Col>
+          &lt;/Row>
+        &lt;/div>
+      &lt;/Card.Body>
+    &lt;/Card>
+  );
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#DirectorsCard">DirectorsCard</a></li><li><a href="global.html#DirectorsView">DirectorsView</a></li><li><a href="global.html#GenreCard">GenreCard</a></li><li><a href="global.html#GenreView">GenreView</a></li><li><a href="global.html#LoginView">LoginView</a></li><li><a href="global.html#MainView">MainView</a></li><li><a href="global.html#MovieCard">MovieCard</a></li><li><a href="global.html#MovieView">MovieView</a></li><li><a href="global.html#MyFlixApplication">MyFlixApplication</a></li><li><a href="global.html#NavBar">NavBar</a></li><li><a href="global.html#ProfileView">ProfileView</a></li><li><a href="global.html#SignupView">SignupView</a></li><li><a href="global.html#container">container</a></li><li><a href="global.html#isFavorite">isFavorite</a></li><li><a href="global.html#root">root</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Feb 08 2025 21:34:27 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/login-view/login-view.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/login-view/login-view.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useState } from 'react';
+import { Form, Button, Row, Col } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+
+/**
+ * LoginView component allows users to log in by entering their credentials.
+ *
+ * @component
+ * @param {Object} props - The properties object.
+ * @param {Function} props.onLoggedIn - Callback function executed upon successful login.
+ * @returns {JSX.Element} A form for user login.
+ */
+export const LoginView = ({ onLoggedIn }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  /**
+   * Handles form submission for login.
+   *
+   * - Prevents full-page reload.
+   * - Sends a POST request to the login API endpoint.
+   * - If successful, stores user details and authentication token in localStorage.
+   * - Calls `onLoggedIn` callback function with user and token data.
+   * - Alerts the user if login fails.
+   *
+   * @param {Event} event - The form submission event.
+   */
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const data = {
+      username: username,
+      password: password,
+    };
+
+    fetch('https://nimkus-movies-flix-6973780b155e.herokuapp.com/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+          localStorage.setItem('token', data.token);
+          onLoggedIn(data.user, data.token);
+        } else {
+          alert('No such user');
+        }
+      })
+      .catch((e) => {
+        alert('Something went wrong');
+      });
+  };
+
+  return (
+    &lt;Form
+      onSubmit={handleSubmit}
+      className="mt-4 p-4 border rounded shadow-sm bg-light"
+      style={{ maxWidth: '400px', margin: '0 auto' }}
+    >
+      &lt;h3 className="text-center mb-4">Login&lt;/h3>
+
+      &lt;Form.Group controlId="formUsernameLogin" className="mb-3">
+        &lt;Form.Label>Username&lt;/Form.Label>
+        &lt;Form.Control
+          type="text"
+          placeholder="Enter your username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          minLength="5"
+          autoComplete="username" // Autofill für das Benutzername-Feld
+          required
+        />
+      &lt;/Form.Group>
+
+      &lt;Form.Group controlId="formPasswordLogin" className="mb-3">
+        &lt;Form.Label>Password&lt;/Form.Label>
+        &lt;Form.Control
+          type="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"
+          title="Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one symbol."
+          autoComplete="current-password" // Autofill für das Passwort-Feld
+          required
+        />
+      &lt;/Form.Group>
+
+      &lt;Button type="submit" variant="primary" className="w-100 mb-3">
+        Login
+      &lt;/Button>
+
+      &lt;div className="text-center">
+        &lt;small>Don't have an account?&lt;/small> &lt;br />
+        &lt;Link to="/signup" className="btn btn-link">
+          Sign up here
+        &lt;/Link>
+      &lt;/div>
+    &lt;/Form>
+  );
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#DirectorsCard">DirectorsCard</a></li><li><a href="global.html#DirectorsView">DirectorsView</a></li><li><a href="global.html#GenreCard">GenreCard</a></li><li><a href="global.html#GenreView">GenreView</a></li><li><a href="global.html#LoginView">LoginView</a></li><li><a href="global.html#MainView">MainView</a></li><li><a href="global.html#MovieCard">MovieCard</a></li><li><a href="global.html#MovieView">MovieView</a></li><li><a href="global.html#MyFlixApplication">MyFlixApplication</a></li><li><a href="global.html#NavBar">NavBar</a></li><li><a href="global.html#ProfileView">ProfileView</a></li><li><a href="global.html#SignupView">SignupView</a></li><li><a href="global.html#container">container</a></li><li><a href="global.html#isFavorite">isFavorite</a></li><li><a href="global.html#root">root</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Feb 08 2025 21:34:27 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

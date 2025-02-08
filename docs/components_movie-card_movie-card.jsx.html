@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/movie-card/movie-card.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/movie-card/movie-card.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useEffect, useRef, useState } from 'react';
+import PropTypes from 'prop-types';
+import Card from 'react-bootstrap/Card';
+import Button from 'react-bootstrap/Button';
+import { Link } from 'react-router-dom';
+import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai';
+
+/**
+ * MovieCard component displays information about a movie.
+ * It includes a title, year, genre, rating, and an option to mark it as a favorite.
+ *
+ * @component
+ * @param {Object} props - The component properties.
+ * @param {Object} props.movie - The movie object containing details about the movie.
+ * @param {string} props.movie.title - The title of the movie.
+ * @param {number} props.movie.year - The release year of the movie.
+ * @param {Array} props.movie.genre - The genre(s) of the movie.
+ * @param {string} props.movie.genreName - The primary genre name of the movie.
+ * @param {Array} props.movie.director - The director(s) of the movie.
+ * @param {number} props.movie.imdb_rating - The IMDb rating of the movie.
+ * @param {number} props.movie.duration - The duration of the movie in minutes.
+ * @param {string} props.movie.language - The primary language of the movie.
+ * @param {string} props.movie.description - A brief description of the movie.
+ * @param {string} props.movie.imagePath - The URL path to the movie's poster image.
+ * @param {boolean} props.movie.featured - Indicates whether the movie is featured.
+ * @param {boolean} props.isFavorite - Indicates if the movie is marked as a favorite.
+ * @param {Function} props.onToggleFavorite - Callback function to toggle the movie's favorite status.
+ * @returns {JSX.Element} A card component displaying movie details.
+ */
+export const MovieCard = ({ movie, isFavorite, onToggleFavorite }) => {
+  /**
+   * Reference to the card element for resize observation.
+   * @type {React.RefObject&lt;HTMLDivElement>}
+   */
+  const [isCompact, setIsCompact] = useState(false);
+
+  /**
+   * Reference to the card element for resize observation.
+   * @type {React.RefObject&lt;HTMLDivElement>}
+   */
+  const cardRef = useRef(null);
+
+  /**
+   * Observes the card's width and switches to a compact mode if below 250px.
+   * Adjusts `isCompact` state accordingly.
+   */
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (entry.contentRect.width &lt; 250) {
+          setIsCompact(true);
+        } else {
+          setIsCompact(false);
+        }
+      }
+    });
+
+    if (cardRef.current) {
+      resizeObserver.observe(cardRef.current);
+    }
+
+    return () => {
+      if (cardRef.current) {
+        resizeObserver.unobserve(cardRef.current);
+      }
+    };
+  }, []);
+
+  /**
+   * Handles toggling the favorite status of the movie.
+   * Sends a request to the API to add or remove the movie from the user's favorites.
+   *
+   * @async
+   * @function
+   * @returns {void}
+   */
+  const handleToggleFavorite = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const username = localStorage.getItem('user') &amp;&amp; JSON.parse(localStorage.getItem('user')).username;
+      if (!token || !username) {
+        console.error("You're not logged in");
+        return;
+      }
+
+      const url = `https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${username}/${movie.id}`;
+      const method = isFavorite ? 'DELETE' : 'PUT';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update favorites: ${response.statusText}`);
+      }
+      onToggleFavorite(movie.id); // Update the favorites list in the parent component
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+    }
+  };
+
+  return (
+    &lt;Card ref={cardRef} className="h-100 bg-light rounded-3 position-relative shadow-sm" style={{ border: 'none' }}>
+      &lt;Card.Img variant="top" src={movie.imagePath} className="bg-secondary" />
+      &lt;Card.Body>
+        &lt;Card.Title>{movie.title}&lt;/Card.Title>
+
+        {!isCompact &amp;&amp; (
+          &lt;Card.Text>
+            Year: {movie.year} &lt;br />
+            Genre: {movie.genreName} &lt;br />
+            IMDB-Rating: {movie.imdb_rating}
+          &lt;/Card.Text>
+        )}
+
+        &lt;Link to={`/movies/${encodeURIComponent(movie.id)}`}>
+          &lt;Button className="p-0" variant="link">
+            Open
+          &lt;/Button>
+        &lt;/Link>
+      &lt;/Card.Body>
+
+      {/* Minimalist heart icon */}
+      &lt;div
+        className="position-absolute bottom-0 end-0 m-2"
+        style={{
+          cursor: 'pointer',
+          fontSize: '1.5rem',
+          color: 'var(--bs-primary)',
+        }}
+        onClick={handleToggleFavorite}
+      >
+        {isFavorite ? &lt;AiFillHeart /> : &lt;AiOutlineHeart />}
+      &lt;/div>
+    &lt;/Card>
+  );
+};
+
+/**
+ * Defines the prop types for the MovieCard component.
+ * @type {Object}
+ */ s;
+MovieCard.propTypes = {
+  movie: PropTypes.shape({
+    title: PropTypes.string,
+    year: PropTypes.number,
+    genre: PropTypes.array,
+    genreName: PropTypes.string,
+    director: PropTypes.array,
+    imdb_rating: PropTypes.number,
+    duration: PropTypes.number,
+    language: PropTypes.string,
+    description: PropTypes.string,
+    imagePath: PropTypes.string,
+    featured: PropTypes.bool,
+  }).isRequired,
+  isFavorite: PropTypes.bool.isRequired,
+  onToggleFavorite: PropTypes.func.isRequired,
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#DirectorsCard">DirectorsCard</a></li><li><a href="global.html#DirectorsView">DirectorsView</a></li><li><a href="global.html#GenreCard">GenreCard</a></li><li><a href="global.html#GenreView">GenreView</a></li><li><a href="global.html#LoginView">LoginView</a></li><li><a href="global.html#MainView">MainView</a></li><li><a href="global.html#MovieCard">MovieCard</a></li><li><a href="global.html#MovieView">MovieView</a></li><li><a href="global.html#MyFlixApplication">MyFlixApplication</a></li><li><a href="global.html#NavBar">NavBar</a></li><li><a href="global.html#ProfileView">ProfileView</a></li><li><a href="global.html#SignupView">SignupView</a></li><li><a href="global.html#container">container</a></li><li><a href="global.html#isFavorite">isFavorite</a></li><li><a href="global.html#root">root</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Feb 08 2025 21:34:27 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

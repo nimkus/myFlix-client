@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/nav-bar/nav-bar.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/nav-bar/nav-bar.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React from 'react';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { Container, Nav, Navbar, Dropdown } from 'react-bootstrap';
+
+/**
+ * NavBar component displays the application's navigation menu.
+ * It includes links to different sections such as Movies, Directors, and Genres.
+ * The navigation bar also allows users to view their profile and log out.
+ *
+ * @component
+ * @param {Object} props - The component properties.
+ * @param {Object} props.user - The current authenticated user's details.
+ * @param {string} props.user.username - The username of the logged-in user.
+ * @param {Function} props.onLogout - Function to handle user logout.
+ * @returns {JSX.Element} A navigation bar with user authentication controls.
+ */
+export const NavBar = ({ user, onLogout }) => {
+  const navigate = useNavigate();
+
+  /**
+   * Handles user logout.
+   * Calls `onLogout` function and redirects the user to the login page.
+   *
+   * @function
+   * @returns {void}
+   */
+  const handleLogout = () => {
+    onLogout();
+    navigate('/login');
+  };
+
+  return (
+    &lt;Navbar expand="lg" variant="light" className="py-3">
+      &lt;Container>
+        &lt;Navbar.Brand as={Link} to="/" className="me-3">
+          &lt;img
+            style={{ width: '130px' }}
+            src="https://i.postimg.cc/rsK0ykfz/bunbuster-Logo.png"
+            alt="Bunbuster logo shows a rabbit with sunglasses above lettering"
+          />
+        &lt;/Navbar.Brand>
+        &lt;Navbar.Toggle aria-controls="basic-navbar-nav" />
+        &lt;Navbar.Collapse id="basic-navbar-nav">
+          &lt;Nav className="me-auto">
+            &lt;Nav.Link as="span" className="fw-bold">
+              &lt;NavLink
+                to="/"
+                className={({ isActive }) => (isActive ? 'text-primary fw-bold' : 'text-dark fw-bold')}
+                style={{ textDecoration: 'none' }}
+              >
+                Movies
+              &lt;/NavLink>
+            &lt;/Nav.Link>
+            &lt;Nav.Link as="span" className="fw-bold">
+              &lt;NavLink
+                to="/movies/directors"
+                className={({ isActive }) => (isActive ? 'text-primary fw-bold' : 'text-dark fw-bold')}
+                style={{ textDecoration: 'none' }}
+              >
+                Directors
+              &lt;/NavLink>
+            &lt;/Nav.Link>
+            &lt;Nav.Link as="span" className="fw-bold">
+              &lt;NavLink
+                to="/movies/genres"
+                className={({ isActive }) => (isActive ? 'text-primary fw-bold' : 'text-dark fw-bold')}
+                style={{ textDecoration: 'none' }}
+              >
+                Genres
+              &lt;/NavLink>
+            &lt;/Nav.Link>
+          &lt;/Nav>
+          &lt;Nav className="ms-auto align-items-center">
+            &lt;Navbar.Text className="me-3">
+              &lt;Dropdown align="end">
+                &lt;Dropdown.Toggle
+                  variant="outline-primary"
+                  id="dropdown-basic"
+                  className="d-flex align-items-center rounded-pill px-3"
+                >
+                  Signed in as: &lt;strong className="ms-2">{user.username}&lt;/strong>
+                &lt;/Dropdown.Toggle>
+                &lt;Dropdown.Menu>
+                  &lt;Dropdown.Item as={Link} to={`/users/${user.username}`}>
+                    Profile
+                  &lt;/Dropdown.Item>
+                  &lt;Dropdown.Divider />
+                  &lt;Dropdown.Item onClick={handleLogout} className="text-primary">
+                    &lt;strong>Logout&lt;/strong>
+                  &lt;/Dropdown.Item>
+                &lt;/Dropdown.Menu>
+              &lt;/Dropdown>
+            &lt;/Navbar.Text>
+          &lt;/Nav>
+        &lt;/Navbar.Collapse>
+      &lt;/Container>
+    &lt;/Navbar>
+  );
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#DirectorsCard">DirectorsCard</a></li><li><a href="global.html#DirectorsView">DirectorsView</a></li><li><a href="global.html#GenreCard">GenreCard</a></li><li><a href="global.html#GenreView">GenreView</a></li><li><a href="global.html#LoginView">LoginView</a></li><li><a href="global.html#MainView">MainView</a></li><li><a href="global.html#MovieCard">MovieCard</a></li><li><a href="global.html#MovieView">MovieView</a></li><li><a href="global.html#MyFlixApplication">MyFlixApplication</a></li><li><a href="global.html#NavBar">NavBar</a></li><li><a href="global.html#ProfileView">ProfileView</a></li><li><a href="global.html#SignupView">SignupView</a></li><li><a href="global.html#container">container</a></li><li><a href="global.html#isFavorite">isFavorite</a></li><li><a href="global.html#root">root</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Feb 08 2025 21:34:27 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

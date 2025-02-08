@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/main-view/main-view.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/main-view/main-view.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useEffect, useState, useRef } from 'react';
+import { Row, Col, Button, Form, Dropdown, Card } from 'react-bootstrap';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+
+import { LoginView } from '../login-view/login-view';
+import { SignupView } from '../signup-view/signup-view';
+import { MovieView } from '../movie-view/movie-view.jsx';
+import { MovieCard } from '../movie-card/movie-card.jsx';
+import { DirectorsCard } from '../directors-card/directors-card.jsx';
+import { DirectorsView } from '../directors-view/directors-view.jsx';
+import { GenreCard } from '../genre-card/genre-card.jsx';
+import { GenreView } from '../genre-view/genre-view.jsx';
+import { ProfileView } from '../profile-view/profile-view.jsx';
+import { NavBar } from '../nav-bar/nav-bar.jsx';
+
+/**
+ * MainView component manages authentication, fetches data from the API,
+ * and renders different sections such as movies, directors, genres, and user profiles.
+ *
+ * @component
+ * @returns {JSX.Element} The main application view.
+ */
+export const MainView = () => {
+  /**
+   * @state {Object} auth - Stores user authentication details.
+   * @property {Object|null} auth.user - The authenticated user object.
+   * @property {string|null} auth.token - The authentication token.
+   */
+  const [auth, setAuth] = useState(() => ({
+    user: JSON.parse(localStorage.getItem('user')) || null,
+    token: localStorage.getItem('token') || null,
+  }));
+
+  const { user, token } = auth;
+
+  // State: Data from API
+  /**
+   * @state {Array} movies - List of movies fetched from the API.
+   */
+  const [movies, setMovies] = useState([]);
+
+  /**
+   * @state {number} page - Current pagination page for movies.
+   */
+  const [page, setPage] = useState(1);
+
+  /**
+   * @state {number} totalPages - Total number of available pages for movies.
+   */
+  const [totalPages, setTotalPages] = useState(1);
+
+  /**
+   * @state {Array} directors - List of directors fetched from the API.
+   */
+  const [directors, setDirectors] = useState([]);
+
+  /**
+   * @state {Array} genres - List of genres fetched from the API.
+   */
+  const [genres, setGenres] = useState([]);
+
+  /**
+   * @state {Object} userInfo - The authenticated user's profile information.
+   */
+  const [userInfo, setUserInfo] = useState([]);
+
+  /**
+   * @state {Array} favoriteMovies - List of movie IDs that the user has marked as favorite.
+   */
+  const [favoriteMovies, setFavoriteMovies] = useState([]);
+
+  // State: Search and filters
+  /**
+   * @state {string} searchTerm - The current search input value.
+   */
+  const [searchTerm, setSearchTerm] = useState('');
+
+  /**
+   * @state {string} debouncedSearchTerm - Debounced search term to reduce API calls.
+   */
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  /**
+   * @state {string} selectedGenre - The currently selected genre filter.
+   */
+  const [selectedGenre, setSelectedGenre] = useState('');
+
+  /**
+   * @state {string} selectedDirector - The currently selected director filter.
+   */
+  const [selectedDirector, setSelectedDirector] = useState('');
+
+  /**
+   * Logs the user out, clears local storage, and resets authentication state.
+   *
+   * @function
+   * @returns {void}
+   */
+  const handleLogout = () => {
+    // Clear user-specific data.
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    setAuth({ user: null, token: null });
+  };
+
+  /**
+   * Handles the debounced search effect, updating `debouncedSearchTerm` after 300ms.
+   */
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => {
+      clearTimeout(handler); // Cleanup on unmount or searchTerm change
+    };
+  }, [searchTerm]);
+
+  /**
+   * Handles search input change.
+   *
+   * @param {React.ChangeEvent&lt;HTMLInputElement>} e - The input change event.
+   */
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value); // Update immediately but debounce for actual search
+  };
+
+  /**
+   * Handles changing the selected genre.
+   *
+   * @param {string} genre - The selected genre ID.
+   */
+  const handleGenreChange = (genre) => {
+    setSelectedGenre(genre);
+  };
+
+  /**
+   * Handles changing the selected director.
+   *
+   * @param {string} director - The selected director ID.
+   */
+  const handleDirectorChange = (director) => {
+    setSelectedDirector(director);
+  };
+
+  /**
+   * Fetches data from an API endpoint with authentication.
+   *
+   * @async
+   * @function
+   * @param {string} url - The API endpoint to fetch data from.
+   * @returns {Promise&lt;Object|null>} - The JSON data from the response or null if an error occurred.
+   */
+  const fetchData = async (url) => {
+    if (!auth.token) {
+      console.warn('No token available. Cannot fetch data.');
+      return null;
+    }
+
+    try {
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${auth.token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: (${response.status}) ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Fetch error:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Fetches data from an API and updates state. Handles filtering and pagination.
+   *
+   * @async
+   * @function
+   * @param {string} url - The API endpoint.
+   * @param {Function} setData - State setter function to update the component's data.
+   * @param {Function} [handlePagination=null] - Optional pagination handler function.
+   */
+  const fetchAndSetState = async (url, setData, handlePagination = null) => {
+    try {
+      const isMoviesEndpoint = /^https?:\/\/[^/]+\/movies(\?.*)?$/.test(url);
+
+      if (isMoviesEndpoint) {
+        // Append search term, genre, and director filters only for the movies endpoint
+        if (debouncedSearchTerm) {
+          url += `&amp;title=${encodeURIComponent(debouncedSearchTerm)}`;
+        }
+        if (selectedGenre) {
+          url += `&amp;genre=${encodeURIComponent(selectedGenre)}`;
+        }
+        if (selectedDirector) {
+          url += `&amp;director=${encodeURIComponent(selectedDirector)}`;
+        }
+      }
+
+      const result = await fetchData(url);
+
+      if (result) {
+        // Check if response contains the "No results found" message
+        if (result.message === 'No results found for the specified filters.') {
+          setData([]); // Set an empty list to clear existing data
+          setTotalPages(1); // Reset pagination
+          setPage(1); // Reset current page
+          return; // Exit early since there are no results
+        }
+
+        // Check if response contains pagination info (totalPages, currentPage)
+        if (result.totalPages &amp;&amp; result.currentPage) {
+          const { data: list, totalPages, currentPage } = result;
+          setData(list); // Set the array data (movies, genres, etc.)
+
+          // If pagination is needed, call the pagination handler
+          if (handlePagination) {
+            handlePagination(totalPages, currentPage); // Update pagination data
+          }
+        } else {
+          // If there is no pagination info, treat it as a single entry
+          setData(result); // Set the single data object (even if it contains arrays)
+        }
+      } else {
+        console.warn('No data received from fetch');
+      }
+    } catch (error) {
+      console.error('Error fetching data from:', url, error);
+    }
+  };
+
+  /**
+   * Toggles the favorite status of a movie for the user.
+   *
+   * @param {string} movieId - The ID of the movie to toggle.
+   */
+  const toggleFavoriteMovie = (movieId) => {
+    setUserInfo((prevUserInfo) => {
+      const updatedFavMovies = prevUserInfo.favMovies.includes(movieId)
+        ? prevUserInfo.favMovies.filter((id) => id !== movieId) // Remove
+        : [...prevUserInfo.favMovies, movieId]; // Add
+
+      return {
+        ...prevUserInfo,
+        favMovies: updatedFavMovies,
+      };
+    });
+  };
+
+  // Function to handle rendering a list or a fallback message
+  const ListOrMessage = ({ list, renderItem, emptyMessage = 'List is loading or empty' }) => {
+    if (list.length === 0) {
+      return &lt;Col className="text-center my-5">{emptyMessage}&lt;/Col>;
+    }
+
+    return list.map((item) => {
+      // Use `item.id` or `item._id` if available, otherwise log a warning about missing unique identifiers
+      if (!item.id &amp;&amp; !item._id) {
+        console.warn("Item missing a unique 'id' or '_id'. Consider fixing this in the data source.");
+      }
+
+      // Only fallback to `index` if `id` or `_id` is not available, but log a warning to make the issue known
+      return &lt;React.Fragment key={item.id || item._id}>{renderItem(item)}&lt;/React.Fragment>;
+    });
+  };
+
+  /**
+   * Route rendering
+   */
+
+  useEffect(() => {
+    if (auth.user &amp;&amp; auth.token) {
+      // MOVIES, FETCH ALL
+      fetchAndSetState(
+        `https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies?page=${page}&amp;limit=9`,
+        (data) => {
+          const moviesFromApi = data.map((movie) => ({
+            id: movie._id,
+            title: movie.title,
+            year: movie.year,
+            genre: movie.genre,
+            genreName: movie.genre?.length > 0 ? movie.genre.map((g) => g.name).join(', ') : 'No genre available',
+            director: movie.director,
+            directorName:
+              movie.director?.length > 0 ? movie.director.map((d) => d.name).join(', ') : 'No director available',
+            imdb_rating: movie.imdb_rating,
+            duration: movie.duration,
+            language: movie.language,
+            description: movie.description,
+            imagePath: movie.imagePath,
+            featured: movie.featured,
+          }));
+
+          setMovies(moviesFromApi);
+        },
+        (totalPages, currentPage) => {
+          setTotalPages(totalPages); // Set the total number of pages
+          setPage(currentPage); // Set the current page
+        }
+      );
+    }
+  }, [auth.user, auth.token, debouncedSearchTerm, selectedGenre, selectedDirector, page]);
+
+  useEffect(() => {
+    if (auth.user &amp;&amp; auth.token) {
+      // DIRECTORS, FETCH ALL
+      fetchAndSetState('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/directors/all', (data) => {
+        const directorsFromApi = data.map((director) => ({
+          id: director._id,
+          name: director.name,
+          bio: director.bio,
+          birthDate: director.date_of_birth ? new Date(director.date_of_birth).toLocaleDateString() : null,
+          deathDate: director.date_of_death ? new Date(director.date_of_death).toLocaleDateString() : null,
+        }));
+
+        setDirectors(directorsFromApi);
+      });
+
+      // GENRES, FETCH ALL
+      fetchAndSetState('https://nimkus-movies-flix-6973780b155e.herokuapp.com/movies/genres/all', (data) => {
+        const genresFromApi = data.map((genre) => ({
+          id: genre._id,
+          name: genre.name,
+          description: genre.description,
+        }));
+
+        setGenres(genresFromApi);
+      });
+
+      // USER, FETCH CURRENT USER INFO
+      fetchAndSetState(`https://nimkus-movies-flix-6973780b155e.herokuapp.com/users/${auth.user.username}`, (data) => {
+        const userInfoFromApi = {
+          id: data._id,
+          username: data.username,
+          password: data.password,
+          email: data.email,
+          birthday: data.birthday ? new Date(data.birthday).toLocaleDateString() : null,
+          favMovies: data.favMovies,
+        };
+
+        setUserInfo(userInfoFromApi);
+        setFavoriteMovies(userInfoFromApi.favMovies);
+      });
+    } else {
+      console.warn('Error fetching data.');
+    }
+  }, [auth.user, auth.token]);
+
+  /**
+   * Route rendering
+   */
+  const renderSignup = () => (
+    &lt;Col md={5}>
+      &lt;SignupView />
+    &lt;/Col>
+  );
+
+  const renderLogin = () => (
+    &lt;Col md={5}>
+      &lt;LoginView
+        onLoggedIn={(newUser, newToken) => {
+          setAuth({ user: newUser, token: newToken });
+          localStorage.setItem('user', JSON.stringify(newUser));
+          localStorage.setItem('token', newToken);
+        }}
+      />
+    &lt;/Col>
+  );
+
+  // Render search and filter options
+  const renderFilters = () => (
+    &lt;>
+      &lt;Row className="mb-4" style={{ height: 350 }}>
+        &lt;Card style={{ position: 'relative' }}>
+          &lt;Card.Img
+            src="https://i.postimg.cc/NFZyyZTZ/bunbuster-wallpaper3.webp"
+            alt="Bunbuster Wallpaper"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: 0.25,
+            }}
+          />
+          &lt;Card.ImgOverlay>&lt;/Card.ImgOverlay>
+          &lt;Card.ImgOverlay className="d-flex justify-content-center align-items-center text-primary">
+            &lt;Card.Text style={{ fontSize: '1.2em', fontWeight: 'bold', textTransform: 'uppercase' }}>
+              Hop into the Bunnyverse: discover your favorite blockbusters in a world ruled by bunnies!
+            &lt;/Card.Text>
+          &lt;/Card.ImgOverlay>
+        &lt;/Card>
+      &lt;/Row>
+      &lt;Row className="mb-4">
+        &lt;Col md={6}>
+          &lt;Form.Control
+            type="text"
+            placeholder="Search movies by title"
+            value={searchTerm}
+            onChange={handleSearch}
+            className="mb-3"
+          />
+        &lt;/Col>
+        &lt;Col md={3}>
+          &lt;Dropdown onSelect={(selectedId) => setSelectedGenre(selectedId || '')}>
+            &lt;Dropdown.Toggle variant="outline-primary" className="w-100">
+              {selectedGenre
+                ? genres.find((g) => g.id === selectedGenre)?.name || 'Filter by Genre'
+                : 'Filter by Genre'}
+            &lt;/Dropdown.Toggle>
+            &lt;Dropdown.Menu>
+              &lt;Dropdown.Item eventKey="">
+                &lt;i>All Genres&lt;/i>
+              &lt;/Dropdown.Item>
+              {genres.map((genre) => (
+                &lt;Dropdown.Item key={genre.id} eventKey={genre.id}>
+                  {genre.name}
+                &lt;/Dropdown.Item>
+              ))}
+            &lt;/Dropdown.Menu>
+          &lt;/Dropdown>
+        &lt;/Col>
+        &lt;Col md={3}>
+          &lt;Dropdown onSelect={(selectedId) => setSelectedDirector(selectedId || '')}>
+            &lt;Dropdown.Toggle variant="outline-primary" className="w-100">
+              {selectedDirector
+                ? directors.find((d) => d.id === selectedDirector)?.name || 'Filter by Director'
+                : 'Filter by Director'}
+            &lt;/Dropdown.Toggle>
+            &lt;Dropdown.Menu>
+              &lt;Dropdown.Item eventKey="">
+                &lt;i>All Directors&lt;/i>
+              &lt;/Dropdown.Item>
+              {directors.map((director) => (
+                &lt;Dropdown.Item key={director.id} eventKey={director.id}>
+                  {director.name}
+                &lt;/Dropdown.Item>
+              ))}
+            &lt;/Dropdown.Menu>
+          &lt;/Dropdown>
+        &lt;/Col>
+      &lt;/Row>
+    &lt;/>
+  );
+
+  const renderMovies = () => (
+    &lt;>
+      &lt;NavBar user={auth.user} onLogout={handleLogout} />
+      {renderFilters()}
+      &lt;ListOrMessage
+        list={movies}
+        renderItem={(movie) => {
+          const isFavorite = userInfo.favMovies.includes(movie.id);
+          return (
+            &lt;Col className="mb-4" md={4}>
+              &lt;MovieCard movie={movie} isFavorite={isFavorite} onToggleFavorite={toggleFavoriteMovie} />
+            &lt;/Col>
+          );
+        }}
+        emptyMessage="No results found for the specified filters. Try adjusting your search or filters."
+      />
+      &lt;Row className="d-flex justify-content-center mb-4">
+        {/* Conditionally render the "Previous page" button */}
+        {page > 1 &amp;&amp; (
+          &lt;Button
+            variant="outline-primary"
+            className="px-4 rounded-pill mx-2 w-auto"
+            aria-label="Go to previous page"
+            onClick={() => setPage((prevPage) => prevPage - 1)}
+          >
+            Previous Page
+          &lt;/Button>
+        )}
+        {/* Conditionally render the "Next page" button */}
+        {page &lt; totalPages &amp;&amp; totalPages > 1 &amp;&amp; (
+          &lt;Button
+            variant="outline-primary"
+            className="px-4 rounded-pill mx-2 w-auto"
+            aria-label="Go to next page"
+            onClick={() => setPage((prevPage) => prevPage + 1)}
+          >
+            Next Page
+          &lt;/Button>
+        )}
+      &lt;/Row>
+    &lt;/>
+  );
+
+  const renderDirectors = () => (
+    &lt;>
+      &lt;NavBar user={auth.user} onLogout={handleLogout} />
+      &lt;ListOrMessage
+        list={directors}
+        renderItem={(director) => (
+          &lt;Col className="mb-4" xs={12}>
+            &lt;DirectorsCard director={director} />
+          &lt;/Col>
+        )}
+      />
+    &lt;/>
+  );
+
+  const renderGenres = () => (
+    &lt;>
+      &lt;NavBar user={auth.user} onLogout={handleLogout} />
+      &lt;ListOrMessage
+        list={genres}
+        renderItem={(genre) => (
+          &lt;Col className="mb-4" xs={12}>
+            &lt;GenreCard genres={genre} />
+          &lt;/Col>
+        )}
+      />
+    &lt;/>
+  );
+
+  const renderSingleMovie = () => (
+    &lt;Col md={8}>
+      &lt;MovieView movies={movies} toggleFavoriteMovie={toggleFavoriteMovie} userFavorites={userInfo.favMovies} />
+    &lt;/Col>
+  );
+
+  const renderSingleDirector = () => {
+    if (directors.length === 0) {
+      return &lt;p>Loading director information...&lt;/p>;
+    }
+    return (
+      &lt;Col md={8}>
+        &lt;DirectorsView directors={directors} />
+      &lt;/Col>
+    );
+  };
+
+  const renderSingleGenre = () => {
+    if (genres.length === 0) {
+      return &lt;p>Loading genre information...&lt;/p>;
+    }
+    return (
+      &lt;Col md={8}>
+        &lt;GenreView genres={genres} />
+      &lt;/Col>
+    );
+  };
+
+  const renderSingleUserInfo = () => {
+    if (userInfo.length === 0) {
+      return &lt;p>Loading user information...&lt;/p>;
+    }
+    return (
+      &lt;Col md={8}>
+        &lt;ProfileView userData={userInfo} toggleFavoriteMovie={toggleFavoriteMovie} />
+      &lt;/Col>
+    );
+  };
+
+  /**
+   * Higher-order component for protecting routes.
+   * Redirects users to login if they are not authenticated.
+   *
+   * @param {Object} props - The component props.
+   * @param {JSX.Element} props.children - The component's child elements.
+   * @returns {JSX.Element} The protected route.
+   */
+  const ProtectedRoute = React.memo(({ children }) => {
+    return auth.user ? children : &lt;Navigate to="/login" replace />;
+  });
+
+  // Unmatched routes
+  const NotFound = () => (
+    &lt;Col>
+      &lt;h2>Page Not Found&lt;/h2>
+      &lt;Link to="/">Return to Home&lt;/Link>
+    &lt;/Col>
+  );
+
+  return (
+    &lt;BrowserRouter>
+      &lt;Row className="justify-content-md-center">
+        &lt;Routes>
+          {/* Login and Signup Routes */}
+          &lt;Route path="/signup" element={auth.user ? &lt;Navigate to="/" /> : renderSignup()} />
+          &lt;Route path="/login" element={auth.user ? &lt;Navigate to="/" /> : renderLogin()} />
+
+          {/* Movies Routes */}
+          &lt;Route path="/" element={&lt;ProtectedRoute>{renderMovies()}&lt;/ProtectedRoute>} />
+          &lt;Route path="/movies/:movieId" element={&lt;ProtectedRoute>{renderSingleMovie()}&lt;/ProtectedRoute>} />
+          &lt;Route path="/movies/directors" element={&lt;ProtectedRoute>{renderDirectors()}&lt;/ProtectedRoute>} />
+          &lt;Route
+            path="/movies/directors/:directorName"
+            element={&lt;ProtectedRoute>{renderSingleDirector()}&lt;/ProtectedRoute>}
+          />
+          &lt;Route path="/movies/genres" element={&lt;ProtectedRoute>{renderGenres()}&lt;/ProtectedRoute>} />
+          &lt;Route path="/movies/genres/:genreName" element={&lt;ProtectedRoute>{renderSingleGenre()}&lt;/ProtectedRoute>} />
+
+          {/* User Profile Routes */}
+          &lt;Route path="/users/:username" element={&lt;ProtectedRoute>{renderSingleUserInfo()}&lt;/ProtectedRoute>} />
+
+          {/* Catch-all route for 404 Not Found */}
+          &lt;Route path="*" element={&lt;NotFound />} />
+        &lt;/Routes>
+      &lt;/Row>
+    &lt;/BrowserRouter>
+  );
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#DirectorsCard">DirectorsCard</a></li><li><a href="global.html#DirectorsView">DirectorsView</a></li><li><a href="global.html#GenreCard">GenreCard</a></li><li><a href="global.html#GenreView">GenreView</a></li><li><a href="global.html#LoginView">LoginView</a></li><li><a href="global.html#MainView">MainView</a></li><li><a href="global.html#MovieCard">MovieCard</a></li><li><a href="global.html#MovieView">MovieView</a></li><li><a href="global.html#MyFlixApplication">MyFlixApplication</a></li><li><a href="global.html#NavBar">NavBar</a></li><li><a href="global.html#ProfileView">ProfileView</a></li><li><a href="global.html#SignupView">SignupView</a></li><li><a href="global.html#container">container</a></li><li><a href="global.html#isFavorite">isFavorite</a></li><li><a href="global.html#root">root</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Feb 08 2025 21:34:27 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
