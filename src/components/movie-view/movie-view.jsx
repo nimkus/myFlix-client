@@ -4,15 +4,38 @@ import { Card, Button, Row, Col, OverlayTrigger, Tooltip } from 'react-bootstrap
 import { Link } from 'react-router-dom';
 import { BsHeart, BsHeartFill } from 'react-icons/bs';
 
+/**
+ * MovieView component displays detailed information about a selected movie.
+ *
+ * @component
+ * @param {Object} props - The component properties.
+ * @param {Array<Object>} props.movies - An array of movie objects available in the system.
+ * @param {Function} props.toggleFavoriteMovie - Function to toggle the movie's favorite status.
+ * @param {Array<string>} props.userFavorites - A list of favorite movie IDs belonging to the user.
+ * @returns {JSX.Element} A detailed view of a movie with an option to mark it as a favorite.
+ */
 export const MovieView = ({ movies, toggleFavoriteMovie, userFavorites }) => {
+  // Get the movie ID from URL parameters
   const { movieId } = useParams();
+
+  // Find the corresponding movie from the movies list
   const movie = movies.find((m) => m.id === movieId);
 
+  // Display a loading message if movie data is not found
   if (!movie) return <p>Loading movie information...</p>;
 
-  // Determine if the movie is a favorite
+  /**
+   * @constant {boolean} isFavorite - Determines if the movie is in the user's favorite list.
+   */
   const isFavorite = userFavorites.includes(movie.id);
 
+  /**
+   * Handles toggling the favorite status of the movie.
+   * Calls `toggleFavoriteMovie` to update the favorite state.
+   *
+   * @function
+   * @returns {void}
+   */
   const handleToggleFavorite = () => {
     toggleFavoriteMovie(movie.id);
   };

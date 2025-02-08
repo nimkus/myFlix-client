@@ -2,9 +2,28 @@ import React from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { Container, Nav, Navbar, Dropdown } from 'react-bootstrap';
 
+/**
+ * NavBar component displays the application's navigation menu.
+ * It includes links to different sections such as Movies, Directors, and Genres.
+ * The navigation bar also allows users to view their profile and log out.
+ *
+ * @component
+ * @param {Object} props - The component properties.
+ * @param {Object} props.user - The current authenticated user's details.
+ * @param {string} props.user.username - The username of the logged-in user.
+ * @param {Function} props.onLogout - Function to handle user logout.
+ * @returns {JSX.Element} A navigation bar with user authentication controls.
+ */
 export const NavBar = ({ user, onLogout }) => {
   const navigate = useNavigate();
 
+  /**
+   * Handles user logout.
+   * Calls `onLogout` function and redirects the user to the login page.
+   *
+   * @function
+   * @returns {void}
+   */
   const handleLogout = () => {
     onLogout();
     navigate('/login');

@@ -5,10 +5,45 @@ import Button from 'react-bootstrap/Button';
 import { Link } from 'react-router-dom';
 import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai';
 
+/**
+ * MovieCard component displays information about a movie.
+ * It includes a title, year, genre, rating, and an option to mark it as a favorite.
+ *
+ * @component
+ * @param {Object} props - The component properties.
+ * @param {Object} props.movie - The movie object containing details about the movie.
+ * @param {string} props.movie.title - The title of the movie.
+ * @param {number} props.movie.year - The release year of the movie.
+ * @param {Array} props.movie.genre - The genre(s) of the movie.
+ * @param {string} props.movie.genreName - The primary genre name of the movie.
+ * @param {Array} props.movie.director - The director(s) of the movie.
+ * @param {number} props.movie.imdb_rating - The IMDb rating of the movie.
+ * @param {number} props.movie.duration - The duration of the movie in minutes.
+ * @param {string} props.movie.language - The primary language of the movie.
+ * @param {string} props.movie.description - A brief description of the movie.
+ * @param {string} props.movie.imagePath - The URL path to the movie's poster image.
+ * @param {boolean} props.movie.featured - Indicates whether the movie is featured.
+ * @param {boolean} props.isFavorite - Indicates if the movie is marked as a favorite.
+ * @param {Function} props.onToggleFavorite - Callback function to toggle the movie's favorite status.
+ * @returns {JSX.Element} A card component displaying movie details.
+ */
 export const MovieCard = ({ movie, isFavorite, onToggleFavorite }) => {
+  /**
+   * Reference to the card element for resize observation.
+   * @type {React.RefObject<HTMLDivElement>}
+   */
   const [isCompact, setIsCompact] = useState(false);
+
+  /**
+   * Reference to the card element for resize observation.
+   * @type {React.RefObject<HTMLDivElement>}
+   */
   const cardRef = useRef(null);
 
+  /**
+   * Observes the card's width and switches to a compact mode if below 250px.
+   * Adjusts `isCompact` state accordingly.
+   */
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       for (let entry of entries) {
@@ -31,6 +66,14 @@ export const MovieCard = ({ movie, isFavorite, onToggleFavorite }) => {
     };
   }, []);
 
+  /**
+   * Handles toggling the favorite status of the movie.
+   * Sends a request to the API to add or remove the movie from the user's favorites.
+   *
+   * @async
+   * @function
+   * @returns {void}
+   */
   const handleToggleFavorite = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -97,7 +140,10 @@ export const MovieCard = ({ movie, isFavorite, onToggleFavorite }) => {
   );
 };
 
-// Define prop constraints
+/**
+ * Defines the prop types for the MovieCard component.
+ * @type {Object}
+ */ s;
 MovieCard.propTypes = {
   movie: PropTypes.shape({
     title: PropTypes.string,
